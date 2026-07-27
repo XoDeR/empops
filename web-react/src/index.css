@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+:root {
+  --empops-ink: #0f1c17;
+  --empops-paper: #f3f6f2;
+  --empops-accent: #1f6b4a;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  color: var(--empops-ink);
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, #d7ebe0 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, #e8f0ea 0%, transparent 50%),
+    var(--empops-paper);
+}

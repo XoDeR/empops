@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: empops
+      POSTGRES_PASSWORD: empops
+      POSTGRES_DB: empops
+    ports:
+      - "5432:5432"
+    volumes:
+      - empops_pg:/var/lib/postgresql/data
+
+volumes:
+  empops_pg:

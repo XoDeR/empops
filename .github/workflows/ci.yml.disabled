@@ -1,0 +1,54 @@
+# EmpOps CI — disabled for now.
+# To enable: rename this file to `ci.yml`.
+
+name: EmpOps CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  laravel:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api-laravel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, pdo_sqlite
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+      - run: php artisan about
+
+  go:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api-go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+      - run: go build ./cmd/api ./cmd/migrate ./cmd/worker
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-react
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web-react/package-lock.json
+      - run: npm ci
+      - run: npm run build

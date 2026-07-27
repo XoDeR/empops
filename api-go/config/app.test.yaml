@@ -1,0 +1,22 @@
+env: test
+
+http:
+  port: 8081
+
+jwt:
+  secret: "test-secret-change-me"
+  issuer: empops
+  audience: empops-web
+  access_token_ttl: 15m
+  refresh_token_ttl: 168h # 7 days
+
+cors:
+  allowed_origins:
+    - http://localhost:5173
+    - http://localhost:3000
+
+log:
+  level: warn
+
+db:
+  dsn: "postgres://empops:empops@localhost:5432/empops_test?sslmode=disable"
