@@ -1,13 +1,13 @@
 openapi: 3.0.3
 info:
   title: EmpOps API
-  version: 0.0.0
-  description: Step 0 OpenAPI skeleton shared by Laravel and Go backends.
+  version: 1.0.0
+  description: Step 1 — Auth + RBAC + Companies + Employees (Laravel and Go parity).
 servers:
   - url: http://localhost:8000/api/v1
-    description: Laravel (Step 0)
+    description: Laravel
   - url: http://localhost:8080/api/v1
-    description: Go (Step 0)
+    description: Go
 paths:
   /health:
     get:
@@ -31,81 +31,558 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiEnvelope"
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      operationId: authRegister
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/TokenPayload"
+        "422":
+          description: Validation error (e.g. email taken)
+
   /auth/login:
     post:
-      summary: Login (stub)
+      summary: Login
       operationId: authLogin
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [email, password]
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
+              $ref: "#/components/schemas/LoginRequest"
       responses:
         "200":
           description: Token pair
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiEnvelope"
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/TokenPayload"
+        "401":
+          description: Invalid credentials
+
   /auth/refresh:
     post:
-      summary: Refresh access token (stub)
+      summary: Refresh access token (rotate refresh)
       operationId: authRefresh
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [refresh_token]
-              properties:
-                refresh_token:
-                  type: string
+              $ref: "#/components/schemas/RefreshRequest"
       responses:
         "200":
-          description: Token pair
+          description: New token pair
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiEnvelope"
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/TokenPayload"
+        "401":
+          description: Invalid or revoked refresh token
+
   /auth/logout:
     post:
-      summary: Logout (stub)
+      summary: Logout (revoke refresh token)
       operationId: authLogout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
       responses:
         "200":
-          description: OK
+          description: Logged out
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiEnvelope"
+
   /auth/me:
     get:
-      summary: Current user (stub)
+      summary: Current user
       operationId: authMe
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: User
+          description: User profile
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiEnvelope"
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/User"
+
+  /companies:
+    get:
+      summary: List companies for current user
+      operationId: listCompanies
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Company memberships
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/CompanyMembership"
+    post:
+      summary: Create a company
+      operationId: createCompany
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCompanyRequest"
+      responses:
+        "201":
+          description: Company created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CreateCompanyResponse"
+
+  /companies/join:
+    post:
+      summary: Join a company by code
+      operationId: joinCompany
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinCompanyRequest"
+      responses:
+        "200":
+          description: Joined
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CreateCompanyResponse"
+
+  /invitations/{link}/accept:
+    post:
+      summary: Accept employee invitation
+      operationId: acceptInvitation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/InvitationLink"
+      responses:
+        "200":
+          description: Invitation accepted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CreateCompanyResponse"
+
+  /companies/{companyId}:
+    get:
+      summary: Company details for member
+      operationId: getCompany
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Company
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CompanyMembership"
+    patch:
+      summary: Update company settings (Adminland)
+      operationId: updateCompany
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCompanyRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Company"
+        "403":
+          description: Forbidden
+
+  /companies/{companyId}/employees:
+    get:
+      summary: List employees
+      operationId: listEmployees
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Employee list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Employee"
+    post:
+      summary: Create employee
+      operationId: createEmployee
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEmployeeRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Employee"
+
+  /companies/{companyId}/employees/{employeeId}:
+    get:
+      summary: Get employee
+      operationId: getEmployee
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Employee
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Employee"
+    patch:
+      summary: Update employee
+      operationId: updateEmployee
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEmployeeRequest"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete employee
+      operationId: deleteEmployee
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/employees/{employeeId}/invite:
+    post:
+      summary: Create invitation for employee
+      operationId: inviteEmployee
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Employee"
+
+  /companies/{companyId}/positions:
+    get:
+      summary: List positions
+      operationId: listPositions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Positions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Position"
+    post:
+      summary: Create position
+      operationId: createPosition
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PositionInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/positions/{positionId}:
+    patch:
+      summary: Update position
+      operationId: updatePosition
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/PositionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PositionInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete position
+      operationId: deletePosition
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/PositionId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/employee-statuses:
+    get:
+      summary: List employee statuses
+      operationId: listEmployeeStatuses
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Statuses
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/EmployeeStatus"
+    post:
+      summary: Create employee status
+      operationId: createEmployeeStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeStatusInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/employee-statuses/{statusId}:
+    patch:
+      summary: Update employee status
+      operationId: updateEmployeeStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/StatusId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeStatusInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete employee status
+      operationId: deleteEmployeeStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/StatusId"
+      responses:
+        "200":
+          description: Deleted
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EmployeeId:
+      name: employeeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PositionId:
+      name: positionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    StatusId:
+      name: statusId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    InvitationLink:
+      name: link
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
   schemas:
     ApiEnvelope:
       type: object
@@ -122,3 +599,303 @@ components:
         timestamp:
           type: string
           format: date-time
+
+    User:
+      type: object
+      required: [id, email, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+
+    TokenPayload:
+      type: object
+      required: [access_token, refresh_token, expires_in, token_type, user]
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+        token_type:
+          type: string
+          example: Bearer
+        user:
+          $ref: "#/components/schemas/User"
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password, password_confirmation]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        password_confirmation:
+          type: string
+          format: password
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+
+    Company:
+      type: object
+      required: [id, name, slug, currency]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          default: EUR
+        code_to_join_company:
+          type: string
+
+    CompanyMembership:
+      allOf:
+        - $ref: "#/components/schemas/Company"
+        - type: object
+          properties:
+            employee_id:
+              type: string
+              format: uuid
+            roles:
+              type: array
+              items:
+                type: string
+                enum: [administrator, hr, employee]
+
+    CreateCompanyRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          default: EUR
+
+    UpdateCompanyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+
+    JoinCompanyRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+
+    CreateCompanyResponse:
+      type: object
+      properties:
+        company:
+          $ref: "#/components/schemas/Company"
+        employee:
+          $ref: "#/components/schemas/Employee"
+
+    PositionRef:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+
+    EmployeeStatusRef:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [internal, external]
+
+    Employee:
+      type: object
+      required: [id, company_id, email, first_name, last_name, locked, roles]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        hired_at:
+          type: string
+          format: date
+          nullable: true
+        locked:
+          type: boolean
+        position:
+          $ref: "#/components/schemas/PositionRef"
+          nullable: true
+        status:
+          $ref: "#/components/schemas/EmployeeStatusRef"
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [administrator, hr, employee]
+        invitation_link:
+          type: string
+          format: uuid
+          nullable: true
+        invitation_url:
+          type: string
+          nullable: true
+
+    CreateEmployeeRequest:
+      type: object
+      required: [email, first_name, last_name]
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        hired_at:
+          type: string
+          format: date
+        position_id:
+          type: string
+          format: uuid
+        employee_status_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [administrator, hr, employee]
+          default: employee
+
+    UpdateEmployeeRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        hired_at:
+          type: string
+          format: date
+          nullable: true
+        position_id:
+          type: string
+          format: uuid
+          nullable: true
+        employee_status_id:
+          type: string
+          format: uuid
+          nullable: true
+        locked:
+          type: boolean
+        role:
+          type: string
+          enum: [administrator, hr, employee]
+
+    Position:
+      type: object
+      required: [id, company_id, title]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+
+    PositionInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+
+    EmployeeStatus:
+      type: object
+      required: [id, company_id, name, type]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [internal, external]
+
+    EmployeeStatusInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [internal, external]
+          default: internal

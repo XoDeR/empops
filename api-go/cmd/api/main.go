@@ -1,6 +1,5 @@
-// Command api is the Core composition root: it loads config, wires JWT and
-// the stub auth use case, builds the Chi router, initializes every enabled
-// module from the registry, and serves HTTP.
+// Command api is the Core composition root: config, Postgres, JWT auth,
+// Chi router, and enabled vertical modules.
 package main
 
 import (
@@ -18,15 +17,15 @@ import (
 	httpadapter "github.com/XoDeR/empops/api-go/internal/adapter/http"
 	"github.com/XoDeR/empops/api-go/internal/adapter/persistence"
 	"github.com/XoDeR/empops/api-go/internal/infrastructure/config"
+	"github.com/XoDeR/empops/api-go/internal/infrastructure/database"
 	"github.com/XoDeR/empops/api-go/internal/usecase"
 	"github.com/XoDeR/empops/api-go/pkg/bus"
 	"github.com/XoDeR/empops/api-go/pkg/jwt"
 	"github.com/XoDeR/empops/api-go/pkg/logger"
 	"github.com/XoDeR/empops/api-go/pkg/module"
 
-	// Blank-import enabled modules so their init() registers them into
-	// module.DefaultRegistry. Add new modules here as they ship.
-	_ "github.com/XoDeR/empops/api-go/internal/modules/example"
+	_ "github.com/XoDeR/empops/api-go/internal/modules/company"
+	_ "github.com/XoDeR/empops/api-go/internal/modules/employee"
 )
 
 func main() {
@@ -50,7 +49,23 @@ func run() error {
 		return fmt.Errorf("load modules config: %w", err)
 	}
 
+	if cfg.DB.DSN == "" {
+		return fmt.Errorf("database DSN is required (set EMPOPS_DB_DSN or db.dsn in %s)", configPath)
+	}
+
 	log := logger.New(cfg.Log.Level)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	pool, err := database.Connect(ctx, database.Config{
+		DSN:            cfg.DB.DSN,
+		ConnectTimeout: 10 * time.Second,
+	})
+	if err != nil {
+		return fmt.Errorf("database: %w", err)
+	}
+	defer pool.Close()
 
 	jwtManager := jwt.NewManager(jwt.Config{
 		Secret:          cfg.JWT.Secret,
@@ -60,20 +75,17 @@ func run() error {
 		RefreshTokenTTL: cfg.JWT.RefreshTTL(),
 	})
 
-	// Step 0 stub: in-memory user repository, no Postgres connection needed.
-	userRepo := persistence.NewMemoryUserRepository()
-	authUseCase := usecase.NewAuthUseCase(userRepo, jwtManager)
+	userRepo := persistence.NewPostgresUserRepository(pool)
+	refreshRepo := persistence.NewPostgresRefreshTokenRepository(pool)
+	authUseCase := usecase.NewAuthUseCase(userRepo, refreshRepo, jwtManager)
 
 	eventBus := bus.NewMemoryBus()
 	core := &module.Core{
 		Logger: log,
 		JWT:    jwtManager,
 		Bus:    eventBus,
-		DB:     nil, // Step 0 stub: no database wired up yet
+		DB:     pool,
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	initialized, err := module.DefaultRegistry.InitializeAll(ctx, core, modulesCfg.Enabled)
 	if err != nil {

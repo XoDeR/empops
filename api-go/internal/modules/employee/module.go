@@ -48,26 +48,28 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 	requireAuth := httpauth.RequireAuth(m.jwt)
 	requireMember := companyauth.RequireMember(m.pool)
 
-	r.Route("/companies/{companyId}", func(sub chi.Router) {
+	// Full paths (not Route("/companies/{companyId}")) — company module already
+	// owns that prefix for GET/PATCH company settings.
+	r.Group(func(sub chi.Router) {
 		sub.Use(requireAuth)
 		sub.Use(requireMember)
 
-		sub.With(companyauth.RequirePermission("employees.view")).Get("/employees", m.handler.ListEmployees)
-		sub.With(companyauth.RequirePermission("employees.create")).Post("/employees", m.handler.CreateEmployee)
-		sub.With(companyauth.RequirePermission("employees.view")).Get("/employees/{employeeId}", m.handler.ShowEmployee)
-		sub.Patch("/employees/{employeeId}", m.handler.UpdateEmployee)
-		sub.With(companyauth.RequirePermission("employees.delete")).Delete("/employees/{employeeId}", m.handler.DeleteEmployee)
-		sub.With(companyauth.RequirePermission("employees.invite")).Post("/employees/{employeeId}/invite", m.handler.InviteEmployee)
+		sub.With(companyauth.RequirePermission("employees.view")).Get("/companies/{companyId}/employees", m.handler.ListEmployees)
+		sub.With(companyauth.RequirePermission("employees.create")).Post("/companies/{companyId}/employees", m.handler.CreateEmployee)
+		sub.With(companyauth.RequirePermission("employees.view")).Get("/companies/{companyId}/employees/{employeeId}", m.handler.ShowEmployee)
+		sub.Patch("/companies/{companyId}/employees/{employeeId}", m.handler.UpdateEmployee)
+		sub.With(companyauth.RequirePermission("employees.delete")).Delete("/companies/{companyId}/employees/{employeeId}", m.handler.DeleteEmployee)
+		sub.With(companyauth.RequirePermission("employees.invite")).Post("/companies/{companyId}/employees/{employeeId}/invite", m.handler.InviteEmployee)
 
-		sub.With(companyauth.RequirePermission("positions.view")).Get("/positions", m.handler.ListPositions)
-		sub.With(companyauth.RequirePermission("positions.create")).Post("/positions", m.handler.CreatePosition)
-		sub.With(companyauth.RequirePermission("positions.update")).Patch("/positions/{positionId}", m.handler.UpdatePosition)
-		sub.With(companyauth.RequirePermission("positions.delete")).Delete("/positions/{positionId}", m.handler.DeletePosition)
+		sub.With(companyauth.RequirePermission("positions.view")).Get("/companies/{companyId}/positions", m.handler.ListPositions)
+		sub.With(companyauth.RequirePermission("positions.create")).Post("/companies/{companyId}/positions", m.handler.CreatePosition)
+		sub.With(companyauth.RequirePermission("positions.update")).Patch("/companies/{companyId}/positions/{positionId}", m.handler.UpdatePosition)
+		sub.With(companyauth.RequirePermission("positions.delete")).Delete("/companies/{companyId}/positions/{positionId}", m.handler.DeletePosition)
 
-		sub.With(companyauth.RequirePermission("employee-statuses.view")).Get("/employee-statuses", m.handler.ListEmployeeStatuses)
-		sub.With(companyauth.RequirePermission("employee-statuses.create")).Post("/employee-statuses", m.handler.CreateEmployeeStatus)
-		sub.With(companyauth.RequirePermission("employee-statuses.update")).Patch("/employee-statuses/{statusId}", m.handler.UpdateEmployeeStatus)
-		sub.With(companyauth.RequirePermission("employee-statuses.delete")).Delete("/employee-statuses/{statusId}", m.handler.DeleteEmployeeStatus)
+		sub.With(companyauth.RequirePermission("employee-statuses.view")).Get("/companies/{companyId}/employee-statuses", m.handler.ListEmployeeStatuses)
+		sub.With(companyauth.RequirePermission("employee-statuses.create")).Post("/companies/{companyId}/employee-statuses", m.handler.CreateEmployeeStatus)
+		sub.With(companyauth.RequirePermission("employee-statuses.update")).Patch("/companies/{companyId}/employee-statuses/{statusId}", m.handler.UpdateEmployeeStatus)
+		sub.With(companyauth.RequirePermission("employee-statuses.delete")).Delete("/companies/{companyId}/employee-statuses/{statusId}", m.handler.DeleteEmployeeStatus)
 	})
 }
 

@@ -1,20 +1,23 @@
 # empops api-go
 
 Go backend for EmpOps, following modular DDD architecture (Clean Architecture
-layers for Core + vertical modules for feature slices). This is the **Step 0**
-skeleton — see [`docs/step-0.md`](docs/step-0.md) for exactly what it implements.
+layers for Core + vertical modules for feature slices).
+
+**Step 1** (auth, RBAC, companies, employees) is implemented — see
+[`docs/step-1.md`](docs/step-1.md). Step 0 skeleton notes remain in
+[`docs/step-0.md`](docs/step-0.md).
 
 ## Requirements
 
 - Go 1.24+ (module targets Go 1.25 toolchain via `go.mod`; `GOTOOLCHAIN=auto`
   will fetch it automatically if needed)
-- PostgreSQL (optional for Step 0 — the stub auth flow works without it)
+- PostgreSQL (required for Step 1 — auth, companies, employees)
 
 ## Layout
 
 ```
-cmd/api        composition root: config + JWT + stub auth + Chi router + module registry
-cmd/migrate    namespaced SQL migration runner (stub: lists migrations, no DB yet)
+cmd/api        composition root: config + JWT + auth + Chi router + module registry
+cmd/migrate    namespaced SQL migration runner (core / company / employee)
 cmd/worker     background job / cron process (stub: heartbeat only)
 config/        app.dev.yaml, app.test.yaml, modules.yaml
 migrations/    namespaced *.up.sql / *.down.sql per module (core/, company/, employee/)
@@ -37,7 +40,7 @@ Copy `.env.example` to `.env` to override secrets/ports via environment
 variables (`EMPOPS_JWT_SECRET`, `EMPOPS_HTTP_PORT`, `EMPOPS_DB_DSN`, ...).
 
 ```bash
-go run ./cmd/migrate   # lists discovered migrations (Step 0 stub, no DB writes)
+go run ./cmd/migrate up   # apply migrations (requires EMPOPS_DB_DSN)
 go run ./cmd/worker    # logs a heartbeat every minute until stopped
 ```
 
@@ -78,11 +81,15 @@ All routes are under `/api/v1` and return the shared JSON envelope:
 |--------|-----------------|--------|------------------------------------------|
 | GET    | /health         | -      | `{ "status": "ok" }`                     |
 | GET    | /version        | -      | `{ "version": "0.0.0", "name": "empops-go" }` |
-| POST   | /auth/login     | -      | stub: accepts any email/password         |
-| POST   | /auth/refresh   | -      | issues a new access token                |
-| POST   | /auth/logout    | -      | no-op success (no revocation store yet)  |
-| GET    | /auth/me        | Bearer | returns the stub user for the token      |
-| GET    | /example/ping   | -      | `{ "pong": true }` from the example module |
+| POST   | /auth/register  | -      | create account                           |
+| POST   | /auth/login     | -      | email + password → JWT + refresh         |
+| POST   | /auth/refresh   | -      | rotate refresh token                     |
+| POST   | /auth/logout    | -      | revoke refresh token                     |
+| GET    | /auth/me        | Bearer | current user                             |
+| *      | /companies/...  | Bearer | company CRUD, join, invitations          |
+| *      | /companies/{id}/employees/... | Bearer + member | employees, positions, statuses |
+
+Full route list and curl examples: [`docs/step-1.md`](docs/step-1.md).
 
 CORS is open to `http://localhost:5173` and `http://localhost:3000`.
 
@@ -94,4 +101,4 @@ Vertical modules live under `internal/modules/<name>` and implement
 1. Adding it to `config/modules.yaml` under `enabled:`.
 2. Blank-importing its package in `cmd/api/main.go` so its `init()` runs.
 
-See `internal/modules/example` for the minimal reference implementation.
+See `internal/modules/company` and `internal/modules/employee` for Step 1 modules.

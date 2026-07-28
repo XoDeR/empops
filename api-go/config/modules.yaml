@@ -1,6 +1,4 @@
-# Enabled vertical modules, in the order they should be considered for
-# dependency resolution (Dependencies() may still reorder initialization).
-# Each enabled module must be blank-imported in cmd/api/main.go so its
-# init() registers it into the default registry.
+# Enabled vertical modules, in dependency order (company before employee).
 enabled:
-  - example
+  - company
+  - employee
