@@ -1,0 +1,64 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Permission;
+use App\Models\Role;
+use Illuminate\Database\Seeder;
+
+class RolePermissionSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $permissions = [
+            'company.update',
+            'adminland.access',
+            'employees.view',
+            'employees.create',
+            'employees.update',
+            'employees.delete',
+            'employees.invite',
+            'positions.view',
+            'positions.create',
+            'positions.update',
+            'positions.delete',
+            'employee-statuses.view',
+            'employee-statuses.create',
+            'employee-statuses.update',
+            'employee-statuses.delete',
+        ];
+
+        foreach ($permissions as $name) {
+            Permission::findOrCreate($name, 'web');
+        }
+
+        $admin = Role::findOrCreate('administrator', 'web');
+        $hr = Role::findOrCreate('hr', 'web');
+        $employee = Role::findOrCreate('employee', 'web');
+
+        $admin->syncPermissions($permissions);
+
+        $hr->syncPermissions([
+            'adminland.access',
+            'employees.view',
+            'employees.create',
+            'employees.update',
+            'employees.delete',
+            'employees.invite',
+            'positions.view',
+            'positions.create',
+            'positions.update',
+            'positions.delete',
+            'employee-statuses.view',
+            'employee-statuses.create',
+            'employee-statuses.update',
+            'employee-statuses.delete',
+        ]);
+
+        $employee->syncPermissions([
+            'employees.view',
+            'positions.view',
+            'employee-statuses.view',
+        ]);
+    }
+}

@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Modules\Auth\Http\Middleware\AuthenticateJwt;
+use Modules\Company\Http\Controllers\CompanyController;
+use Modules\Company\Http\Controllers\InvitationController;
+use Modules\Company\Http\Middleware\EnsureCompanyMember;
+use Modules\Company\Http\Middleware\EnsurePermission;
+
+Route::prefix('v1')->middleware(AuthenticateJwt::class)->group(function () {
+    Route::get('companies', [CompanyController::class, 'index']);
+    Route::post('companies', [CompanyController::class, 'store']);
+    Route::post('companies/join', [CompanyController::class, 'join']);
+
+    Route::post('invitations/{link}/accept', [InvitationController::class, 'accept']);
+
+    Route::prefix('companies/{companyId}')
+        ->middleware(EnsureCompanyMember::class)
+        ->group(function () {
+            Route::get('/', [CompanyController::class, 'show']);
+            Route::patch('/', [CompanyController::class, 'update'])
+                ->middleware(EnsurePermission::class.':company.update');
+        });
+});
