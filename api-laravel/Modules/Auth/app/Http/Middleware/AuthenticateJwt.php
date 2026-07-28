@@ -2,9 +2,11 @@
 
 namespace Modules\Auth\Http\Middleware;
 
+use App\Models\User;
 use App\Support\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Modules\Auth\Services\JwtService;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -31,7 +33,16 @@ final class AuthenticateJwt
             return ApiResponse::error('Access token required', 401);
         }
 
-        $request->attributes->set('jwt_sub', $claims->sub ?? null);
+        $userId = (string) ($claims->sub ?? '');
+        $user = User::query()->find($userId);
+
+        if ($user === null) {
+            return ApiResponse::error('User not found', 401);
+        }
+
+        Auth::setUser($user);
+        $request->setUserResolver(static fn () => $user);
+        $request->attributes->set('jwt_sub', $userId);
         $request->attributes->set('jwt_claims', $claims);
 
         return $next($request);

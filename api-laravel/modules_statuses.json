@@ -1,4 +1,6 @@
 {
     "Auth": true,
-    "Core": true
+    "Core": true,
+    "Company": true,
+    "Employee": true
 }

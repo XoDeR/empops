@@ -1,0 +1,11 @@
+{
+    "name": "Company",
+    "alias": "company",
+    "description": "Companies, settings, tenancy",
+    "keywords": [],
+    "priority": 10,
+    "providers": [
+        "Modules\\Company\\Providers\\CompanyServiceProvider"
+    ],
+    "files": []
+}
