@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/XoDeR/empops/api-go/internal/adapter/http/dto"
-	"github.com/XoDeR/empops/api-go/internal/adapter/http/middleware"
+	"github.com/XoDeR/empops/api-go/pkg/httpauth"
 	"github.com/XoDeR/empops/api-go/internal/domain/entity"
 	"github.com/XoDeR/empops/api-go/internal/usecase"
 	"github.com/XoDeR/empops/api-go/pkg/response"
@@ -20,6 +20,27 @@ type AuthHandler struct {
 // NewAuthHandler builds an AuthHandler from its dependencies.
 func NewAuthHandler(authUseCase *usecase.AuthUseCase) *AuthHandler {
 	return &AuthHandler{authUseCase: authUseCase}
+}
+
+// Register handles POST /auth/register.
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	var req dto.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Fail(w, http.StatusBadRequest, "invalid request body", err.Error())
+		return
+	}
+
+	result, err := h.authUseCase.Register(r.Context(), req.Name, req.Email, req.Password)
+	if err != nil {
+		if errors.Is(err, usecase.ErrEmailTaken) {
+			response.Fail(w, http.StatusUnprocessableEntity, "email already registered", nil)
+			return
+		}
+		response.Fail(w, http.StatusInternalServerError, "registration failed", err.Error())
+		return
+	}
+
+	response.Created(w, "Registered", authResultToResponse(result))
 }
 
 // Login handles POST /auth/login.
@@ -60,16 +81,19 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, "token refreshed", authResultToResponse(result))
 }
 
-// Logout handles POST /auth/logout. Step 0 has no server-side token
-// revocation store yet, so this is a no-op that always succeeds; the client
-// is expected to discard its tokens.
+// Logout handles POST /auth/logout and revokes the refresh token when provided.
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	var req dto.RefreshRequest
+	if r.Body != nil {
+		_ = json.NewDecoder(r.Body).Decode(&req)
+	}
+	_ = h.authUseCase.Logout(r.Context(), req.RefreshToken)
 	response.OK(w, "logged out", nil)
 }
 
 // Me handles GET /auth/me, requiring middleware.RequireAuth to have run.
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.UserIDFromContext(r.Context())
+	userID, ok := httpauth.UserIDFromContext(r.Context())
 	if !ok {
 		response.Fail(w, http.StatusUnauthorized, "missing authenticated user", nil)
 		return

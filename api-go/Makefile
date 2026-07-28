@@ -1,6 +1,10 @@
-.PHONY: build build-api build-migrate build-worker run-api run-migrate run-worker test fmt vet tidy clean
+.PHONY: build build-api build-migrate build-worker run-api run-migrate run-worker test fmt vet tidy clean sqlc
 
 build: build-api build-migrate build-worker
+
+# Requires sqlc >= 1.29 on PATH (Windows: download release zip; do not use 1.28).
+sqlc:
+	sqlc generate
 
 build-api:
 	go build -o bin/api.exe ./cmd/api

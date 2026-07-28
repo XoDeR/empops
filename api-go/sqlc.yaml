@@ -1,8 +1,11 @@
 version: "2"
+# Requires sqlc >= 1.29 (1.28 OOMs on Windows via wazero/go-pgquery).
+# Schema DDL lives in schema/schema.sql (CREATE TABLE only) — keep in sync with
+# migrations/*/ *.up.sql; do not point sqlc at migrations/ (seeds + downs bloat parse).
 sql:
   - engine: "postgresql"
     queries: "sql/core/queries.sql"
-    schema: "migrations/core"
+    schema: "schema/schema.sql"
     gen:
       go:
         package: "coredb"
@@ -10,3 +13,88 @@ sql:
         sql_package: "pgx/v5"
         emit_json_tags: true
         emit_interface: true
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+          - db_type: "date"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+
+  - engine: "postgresql"
+    queries: "sql/company/queries.sql"
+    schema: "schema/schema.sql"
+    gen:
+      go:
+        package: "companydb"
+        out: "internal/modules/company/adapter/persistence/companydb"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+
+  - engine: "postgresql"
+    queries: "sql/employee/queries.sql"
+    schema: "schema/schema.sql"
+    gen:
+      go:
+        package: "employeedb"
+        out: "internal/modules/employee/adapter/persistence/employeedb"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+          - db_type: "date"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true

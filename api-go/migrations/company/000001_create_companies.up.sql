@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS companies (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    currency VARCHAR(3) NOT NULL DEFAULT 'EUR',
+    code_to_join_company VARCHAR(64) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

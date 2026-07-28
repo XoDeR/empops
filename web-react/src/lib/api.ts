@@ -1,12 +1,16 @@
-export type ApiEnvelope<T> = {
-  success: boolean
-  message: string
-  data: T
-  error: unknown
-  timestamp: string
-}
+import type { ApiEnvelope } from '@/types/api'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1'
+
+export class ApiError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
 
 export async function apiFetch<T>(
   path: string,
@@ -23,11 +27,18 @@ export async function apiFetch<T>(
     },
   })
 
-  const body = (await res.json()) as ApiEnvelope<T>
+  let body: ApiEnvelope<T>
+  try {
+    body = (await res.json()) as ApiEnvelope<T>
+  } catch {
+    throw new ApiError(`Request failed (${res.status})`, res.status)
+  }
+
   if (!res.ok || !body.success) {
-    throw new Error(body.message || `Request failed (${res.status})`)
+    throw new ApiError(body.message || `Request failed (${res.status})`, res.status)
   }
   return body
 }
 
 export { API_BASE }
+export type { ApiEnvelope }

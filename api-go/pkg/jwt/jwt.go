@@ -49,55 +49,62 @@ func NewManager(cfg Config) *Manager {
 
 // TokenPair is the result of issuing a new access + refresh token pair.
 type TokenPair struct {
-	AccessToken  string
-	RefreshToken string
-	ExpiresIn    int64 // seconds until the access token expires
+	AccessToken      string
+	RefreshToken     string
+	RefreshJTI       string    // jti claim embedded in RefreshToken, for persistence
+	RefreshExpiresAt time.Time // exp claim embedded in RefreshToken, for persistence
+	ExpiresIn        int64     // seconds until the access token expires
 }
 
 // IssuePair creates a new access token and refresh token for the given subject (user ID).
 func (m *Manager) IssuePair(subject string) (TokenPair, error) {
-	access, err := m.issue(subject, TokenTypeAccess, m.cfg.AccessTokenTTL)
+	access, _, _, err := m.issue(subject, TokenTypeAccess, m.cfg.AccessTokenTTL)
 	if err != nil {
 		return TokenPair{}, err
 	}
 
-	refresh, err := m.issue(subject, TokenTypeRefresh, m.cfg.RefreshTokenTTL)
+	refresh, refreshJTI, refreshExpiresAt, err := m.issue(subject, TokenTypeRefresh, m.cfg.RefreshTokenTTL)
 	if err != nil {
 		return TokenPair{}, err
 	}
 
 	return TokenPair{
-		AccessToken:  access,
-		RefreshToken: refresh,
-		ExpiresIn:    int64(m.cfg.AccessTokenTTL.Seconds()),
+		AccessToken:      access,
+		RefreshToken:     refresh,
+		RefreshJTI:       refreshJTI,
+		RefreshExpiresAt: refreshExpiresAt,
+		ExpiresIn:        int64(m.cfg.AccessTokenTTL.Seconds()),
 	}, nil
 }
 
 // IssueAccessToken creates a standalone access token, used when refreshing.
 func (m *Manager) IssueAccessToken(subject string) (string, int64, error) {
-	token, err := m.issue(subject, TokenTypeAccess, m.cfg.AccessTokenTTL)
+	token, _, _, err := m.issue(subject, TokenTypeAccess, m.cfg.AccessTokenTTL)
 	if err != nil {
 		return "", 0, err
 	}
 	return token, int64(m.cfg.AccessTokenTTL.Seconds()), nil
 }
 
-func (m *Manager) issue(subject string, tokenType TokenType, ttl time.Duration) (string, error) {
+func (m *Manager) issue(subject string, tokenType TokenType, ttl time.Duration) (token string, jti string, expiresAt time.Time, err error) {
 	now := time.Now().UTC()
+	expiresAt = now.Add(ttl)
+	jti = uuid.NewString()
+
 	claims := Claims{
 		Type: tokenType,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   subject,
-			ID:        uuid.NewString(),
+			ID:        jti,
 			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			Issuer:    m.cfg.Issuer,
 			Audience:  jwt.ClaimStrings{m.cfg.Audience},
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(m.cfg.Secret))
+	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(m.cfg.Secret))
+	return signed, jti, expiresAt, err
 }
 
 // Parse validates raw and returns its claims. It also enforces the expected

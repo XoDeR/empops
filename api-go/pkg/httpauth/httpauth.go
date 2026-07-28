@@ -1,7 +1,8 @@
-// Package middleware holds Core HTTP middleware (auth, etc.) shared across
-// routes; modules receive equivalent helpers via pkg or module.Core rather
-// than importing this package directly.
-package middleware
+// Package httpauth provides the shared JWT Bearer-auth HTTP middleware used
+// by Core and every vertical module. It lives in pkg (not internal/adapter)
+// specifically so modules can require authentication without importing
+// Core's internal packages (see architecture-go-ddd.md anti-pattern #2).
+package httpauth
 
 import (
 	"context"
@@ -20,20 +21,20 @@ const UserIDContextKey contextKey = "userID"
 
 // RequireAuth returns middleware that rejects requests without a valid
 // Bearer access token, storing the token subject (user ID) in the request
-// context on success.
+// context on success. Mirrors Laravel's AuthenticateJwt middleware.
 func RequireAuth(manager *jwt.Manager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
 			token, ok := bearerToken(header)
 			if !ok {
-				response.Fail(w, http.StatusUnauthorized, "missing or invalid Authorization header", nil)
+				response.Fail(w, http.StatusUnauthorized, "Missing or invalid Authorization header", nil)
 				return
 			}
 
 			claims, err := manager.Parse(token, jwt.TokenTypeAccess)
 			if err != nil {
-				response.Fail(w, http.StatusUnauthorized, "invalid or expired access token", nil)
+				response.Fail(w, http.StatusUnauthorized, "Invalid or expired token", nil)
 				return
 			}
 
@@ -51,10 +52,10 @@ func UserIDFromContext(ctx context.Context) (string, bool) {
 
 func bearerToken(header string) (string, bool) {
 	const prefix = "Bearer "
-	if !strings.HasPrefix(header, prefix) {
+	if !strings.HasPrefix(header, prefix) && !strings.HasPrefix(header, "bearer ") {
 		return "", false
 	}
-	token := strings.TrimSpace(strings.TrimPrefix(header, prefix))
+	token := strings.TrimSpace(header[len(prefix):])
 	if token == "" {
 		return "", false
 	}

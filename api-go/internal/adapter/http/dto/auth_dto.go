@@ -2,6 +2,14 @@
 // domain entities so wire format changes never leak into business logic.
 package dto
 
+// RegisterRequest is the POST /auth/register body.
+type RegisterRequest struct {
+	Name                string `json:"name"`
+	Email               string `json:"email"`
+	Password            string `json:"password"`
+	PasswordConfirmation string `json:"password_confirmation"`
+}
+
 // LoginRequest is the POST /auth/login body.
 type LoginRequest struct {
 	Email    string `json:"email"`

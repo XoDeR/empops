@@ -8,8 +8,8 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	"github.com/XoDeR/empops/api-go/internal/adapter/http/middleware"
 	"github.com/XoDeR/empops/api-go/internal/usecase"
+	"github.com/XoDeR/empops/api-go/pkg/httpauth"
 	"github.com/XoDeR/empops/api-go/pkg/jwt"
 )
 
@@ -43,13 +43,14 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	}))
 
 	authHandler := NewAuthHandler(cfg.AuthUseCase)
-	requireAuth := middleware.RequireAuth(cfg.JWTManager)
+	requireAuth := httpauth.RequireAuth(cfg.JWTManager)
 
 	r.Route("/api/v1", func(v1 chi.Router) {
 		v1.Get("/health", HealthHandler)
 		v1.Get("/version", VersionHandler)
 
 		v1.Route("/auth", func(auth chi.Router) {
+			auth.Post("/register", authHandler.Register)
 			auth.Post("/login", authHandler.Login)
 			auth.Post("/refresh", authHandler.Refresh)
 			auth.Post("/logout", authHandler.Logout)

@@ -17,8 +17,9 @@ cmd/api        composition root: config + JWT + stub auth + Chi router + module 
 cmd/migrate    namespaced SQL migration runner (stub: lists migrations, no DB yet)
 cmd/worker     background job / cron process (stub: heartbeat only)
 config/        app.dev.yaml, app.test.yaml, modules.yaml
-migrations/    namespaced *.up.sql / *.down.sql per module (starts with core/)
-sql/           SQLC query sources (sqlc.yaml points at sql/core/queries.sql)
+migrations/    namespaced *.up.sql / *.down.sql per module (core/, company/, employee/)
+schema/        CREATE TABLE DDL for sqlc only (keep in sync with migrations)
+sql/           SQLC query sources (core / company / employee)
 internal/      Core domain / usecase / adapter / infrastructure + modules/
 pkg/           cross-cutting SDKs shared by Core and modules (jwt, logger,
                response, pagination, uuidv7, bus, module, migration)
@@ -49,6 +50,21 @@ go build -o bin/api.exe ./cmd/api
 go build -o bin/migrate.exe ./cmd/migrate
 go build -o bin/worker.exe ./cmd/worker
 ```
+
+## SQLC
+
+Requires **sqlc ≥ 1.29** (1.28 OOMs on Windows via wazero). Prefer the
+[release binary](https://github.com/sqlc-dev/sqlc/releases) over `go install`
+of bleeding-edge tags that need a newer Go toolchain.
+
+```bash
+# After editing sql/*/queries.sql or schema/schema.sql:
+make sqlc
+# or: sqlc generate
+```
+
+`sqlc.yaml` reads `schema/schema.sql` (DDL only), not `migrations/` — seeds and
+`.down.sql` files must not be in the sqlc schema path.
 
 ## API
 
