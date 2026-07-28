@@ -61,6 +61,11 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 		sub.With(companyauth.RequirePermission("employees.delete")).Delete("/companies/{companyId}/employees/{employeeId}", m.handler.DeleteEmployee)
 		sub.With(companyauth.RequirePermission("employees.invite")).Post("/companies/{companyId}/employees/{employeeId}/invite", m.handler.InviteEmployee)
 
+		sub.With(companyauth.RequirePermission("employees.view")).Get("/companies/{companyId}/employees/{employeeId}/managers", m.handler.ListManagers)
+		sub.With(companyauth.RequirePermission("employees.view")).Get("/companies/{companyId}/employees/{employeeId}/direct-reports", m.handler.ListDirectReports)
+		sub.With(companyauth.RequirePermission("hierarchy.assign")).Post("/companies/{companyId}/employees/{employeeId}/managers", m.handler.AssignManager)
+		sub.With(companyauth.RequirePermission("hierarchy.assign")).Delete("/companies/{companyId}/employees/{employeeId}/managers/{managerId}", m.handler.UnassignManager)
+
 		sub.With(companyauth.RequirePermission("positions.view")).Get("/companies/{companyId}/positions", m.handler.ListPositions)
 		sub.With(companyauth.RequirePermission("positions.create")).Post("/companies/{companyId}/positions", m.handler.CreatePosition)
 		sub.With(companyauth.RequirePermission("positions.update")).Patch("/companies/{companyId}/positions/{positionId}", m.handler.UpdatePosition)

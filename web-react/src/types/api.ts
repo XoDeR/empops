@@ -47,6 +47,18 @@ export type EmployeeStatus = {
   type: EmployeeStatusType
 }
 
+export type EmployeeSummary = {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+}
+
+export type TeamRef = {
+  id: string
+  name: string
+}
+
 export type Employee = {
   id: string
   company_id: string
@@ -59,6 +71,30 @@ export type Employee = {
   position: { id: string; title: string } | null
   status: { id: string; name: string; type: EmployeeStatusType } | null
   roles: string[]
+  manager?: EmployeeSummary | null
+  managers?: EmployeeSummary[]
+  teams?: TeamRef[]
+  is_manager?: boolean
   invitation_link?: string | null
   invitation_url?: string | null
+}
+
+export type Team = {
+  id: string
+  company_id: string
+  name: string
+  description: string | null
+  leader: EmployeeSummary | null
+  members: EmployeeSummary[]
+  member_count: number
+}
+
+export type DashboardShell = {
+  view: 'me' | 'team' | 'manager' | 'hr'
+  widgets: unknown[]
+  flags: {
+    is_manager: boolean
+    can_manage_hr: boolean
+    is_admin: boolean
+  }
 }

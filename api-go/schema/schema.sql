@@ -90,3 +90,45 @@ CREATE TABLE employee_roles (
     role_id UUID NOT NULL REFERENCES roles (id) ON DELETE CASCADE,
     PRIMARY KEY (employee_id, role_id)
 );
+
+CREATE TABLE direct_reports (
+    id UUID PRIMARY KEY,
+    company_id UUID NOT NULL REFERENCES companies (id) ON DELETE CASCADE,
+    manager_id UUID NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (manager_id, employee_id)
+);
+
+CREATE TABLE teams (
+    id UUID PRIMARY KEY,
+    company_id UUID NOT NULL REFERENCES companies (id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    team_leader_id UUID REFERENCES employees (id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (company_id, name)
+);
+
+CREATE TABLE employee_team (
+    employee_id UUID NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    team_id UUID NOT NULL REFERENCES teams (id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (employee_id, team_id)
+);
+
+CREATE TABLE activity_logs (
+    id UUID PRIMARY KEY,
+    company_id UUID NOT NULL REFERENCES companies (id) ON DELETE CASCADE,
+    event VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    subject_type VARCHAR(255),
+    subject_id UUID,
+    causer_type VARCHAR(255),
+    causer_id UUID,
+    properties JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

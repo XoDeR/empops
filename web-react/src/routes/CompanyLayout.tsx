@@ -9,6 +9,15 @@ export type CompanyContextValue = {
   company: CompanyMembership
   isAdmin: boolean
   isHrOrAdmin: boolean
+  isManager: boolean
+}
+
+function tabClass({ isActive }: { isActive: boolean }) {
+  return `border-b-2 pb-2 ${
+    isActive
+      ? 'border-[var(--empops-accent)] font-semibold'
+      : 'border-transparent text-black/60 hover:text-black'
+  }`
 }
 
 export default function CompanyLayout() {
@@ -45,8 +54,9 @@ export default function CompanyLayout() {
   const roles = company.roles
   const isAdmin = roles.includes('administrator')
   const isHrOrAdmin = isAdmin || roles.includes('hr')
+  const isManager = roles.includes('manager') || isHrOrAdmin
 
-  const context: CompanyContextValue = { company, isAdmin, isHrOrAdmin }
+  const context: CompanyContextValue = { company, isAdmin, isHrOrAdmin, isManager }
 
   return (
     <div className="space-y-6">
@@ -55,30 +65,18 @@ export default function CompanyLayout() {
         <h1 className="text-2xl font-semibold">{company.name}</h1>
       </div>
 
-      <nav className="flex gap-4 border-b border-black/10 text-sm">
-        <NavLink
-          to={`/companies/${companyId}/employees`}
-          className={({ isActive }) =>
-            `border-b-2 pb-2 ${
-              isActive
-                ? 'border-[var(--empops-accent)] font-semibold'
-                : 'border-transparent text-black/60 hover:text-black'
-            }`
-          }
-        >
+      <nav className="flex flex-wrap gap-4 border-b border-black/10 text-sm">
+        <NavLink to={`/companies/${companyId}/dashboard/me`} className={tabClass}>
+          Dashboard
+        </NavLink>
+        <NavLink to={`/companies/${companyId}/employees`} className={tabClass}>
           Employees
         </NavLink>
+        <NavLink to={`/companies/${companyId}/teams`} className={tabClass}>
+          Teams
+        </NavLink>
         {isHrOrAdmin && (
-          <NavLink
-            to={`/companies/${companyId}/adminland`}
-            className={({ isActive }) =>
-              `border-b-2 pb-2 ${
-                isActive
-                  ? 'border-[var(--empops-accent)] font-semibold'
-                  : 'border-transparent text-black/60 hover:text-black'
-              }`
-            }
-          >
+          <NavLink to={`/companies/${companyId}/adminland`} className={tabClass}>
             Adminland
           </NavLink>
         )}

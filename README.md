@@ -28,6 +28,15 @@ Multi-tenant employee directory with login, company tenancy, RBAC, and Adminland
 - OpenAPI: [packages/api-types/openapi/v1.yaml](packages/api-types/openapi/v1.yaml)
 - Auth prod TODOs: [empops-docs/auth-prod-todos.md](../empops-docs/auth-prod-todos.md)
 
+## Step 2 — Teams, hierarchy, and org structure
+
+Org chart–aware HRIS: teams (members/lead), manager/direct reports, dashboard shells, audit logs.
+
+- [api-laravel/docs/step-2.md](api-laravel/docs/step-2.md)
+- [api-go/docs/step-2.md](api-go/docs/step-2.md)
+- [web-react/docs/step-2.md](web-react/docs/step-2.md)
+- OpenAPI: [packages/api-types/openapi/v1.yaml](packages/api-types/openapi/v1.yaml)
+
 ### Quick start
 
 ```bash

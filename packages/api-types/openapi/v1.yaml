@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: EmpOps API
   version: 1.0.0
-  description: Step 1 — Auth + RBAC + Companies + Employees (Laravel and Go parity).
+  description: Step 2 — Teams, hierarchy, and org structure (Laravel and Go parity).
 servers:
   - url: http://localhost:8000/api/v1
     description: Laravel
@@ -539,6 +539,320 @@ paths:
         "200":
           description: Deleted
 
+  /companies/{companyId}/teams:
+    get:
+      summary: List teams
+      operationId: listTeams
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Teams
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Team"
+    post:
+      summary: Create team
+      operationId: createTeam
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeamRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Team"
+
+  /companies/{companyId}/teams/{teamId}:
+    get:
+      summary: Get team
+      operationId: getTeam
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TeamId"
+      responses:
+        "200":
+          description: Team
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Team"
+    patch:
+      summary: Update team
+      operationId: updateTeam
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TeamId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTeamRequest"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete team
+      operationId: deleteTeam
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TeamId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/teams/{teamId}/members/{employeeId}:
+    post:
+      summary: Add team member
+      operationId: addTeamMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TeamId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Member added
+    delete:
+      summary: Remove team member
+      operationId: removeTeamMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TeamId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Member removed
+
+  /companies/{companyId}/teams/{teamId}/lead:
+    put:
+      summary: Set or clear team lead
+      operationId: setTeamLead
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TeamId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetTeamLeadRequest"
+      responses:
+        "200":
+          description: Lead updated
+
+  /companies/{companyId}/employees/{employeeId}/managers:
+    get:
+      summary: List managers for employee
+      operationId: listManagers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Managers
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/EmployeeSummary"
+    post:
+      summary: Assign manager
+      operationId: assignManager
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignManagerRequest"
+      responses:
+        "201":
+          description: Manager assigned
+
+  /companies/{companyId}/employees/{employeeId}/managers/{managerId}:
+    delete:
+      summary: Unassign manager
+      operationId: unassignManager
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+        - $ref: "#/components/parameters/ManagerId"
+      responses:
+        "200":
+          description: Manager unassigned
+
+  /companies/{companyId}/employees/{employeeId}/direct-reports:
+    get:
+      summary: List direct reports
+      operationId: listDirectReports
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Direct reports
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/EmployeeSummary"
+
+  /companies/{companyId}/dashboard/me:
+    get:
+      summary: Me dashboard shell
+      operationId: dashboardMe
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Dashboard shell
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DashboardShell"
+
+  /companies/{companyId}/dashboard/team:
+    get:
+      summary: Team dashboard shell
+      operationId: dashboardTeam
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Dashboard shell
+
+  /companies/{companyId}/dashboard/manager:
+    get:
+      summary: Manager dashboard shell
+      operationId: dashboardManager
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Dashboard shell
+        "403":
+          description: Not a manager
+
+  /companies/{companyId}/dashboard/hr:
+    get:
+      summary: HR dashboard shell
+      operationId: dashboardHr
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Dashboard shell
+        "403":
+          description: Not HR/admin
+
+  /companies/{companyId}/audit-logs:
+    get:
+      summary: List company audit logs
+      operationId: listAuditLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AuditLogPage"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -570,6 +884,20 @@ components:
         format: uuid
     StatusId:
       name: statusId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TeamId:
+      name: teamId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ManagerId:
+      name: managerId
       in: path
       required: true
       schema:
@@ -694,7 +1022,7 @@ components:
               type: array
               items:
                 type: string
-                enum: [administrator, hr, employee]
+                enum: [administrator, hr, employee, manager]
 
     CreateCompanyRequest:
       type: object
@@ -791,7 +1119,20 @@ components:
           type: array
           items:
             type: string
-            enum: [administrator, hr, employee]
+            enum: [administrator, hr, employee, manager]
+        manager:
+          $ref: "#/components/schemas/EmployeeSummary"
+          nullable: true
+        managers:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployeeSummary"
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamRef"
+        is_manager:
+          type: boolean
         invitation_link:
           type: string
           format: uuid
@@ -899,3 +1240,155 @@ components:
           type: string
           enum: [internal, external]
           default: internal
+
+    EmployeeSummary:
+      type: object
+      required: [id, first_name, last_name, email]
+      properties:
+        id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    TeamRef:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    Team:
+      type: object
+      required: [id, company_id, name, members, member_count]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        leader:
+          $ref: "#/components/schemas/EmployeeSummary"
+          nullable: true
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployeeSummary"
+        member_count:
+          type: integer
+
+    CreateTeamRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+
+    UpdateTeamRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+
+    SetTeamLeadRequest:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    AssignManagerRequest:
+      type: object
+      required: [manager_id]
+      properties:
+        manager_id:
+          type: string
+          format: uuid
+
+    DashboardShell:
+      type: object
+      required: [view, widgets, flags]
+      properties:
+        view:
+          type: string
+          enum: [me, team, manager, hr]
+        widgets:
+          type: array
+          items:
+            type: object
+        flags:
+          type: object
+          properties:
+            is_manager:
+              type: boolean
+            can_manage_hr:
+              type: boolean
+            is_admin:
+              type: boolean
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+        company_id:
+          type: string
+          format: uuid
+          nullable: true
+        event:
+          type: string
+        description:
+          type: string
+        subject_type:
+          type: string
+          nullable: true
+        subject_id:
+          type: string
+          nullable: true
+        causer_type:
+          type: string
+          nullable: true
+        causer_id:
+          type: string
+          nullable: true
+        properties:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+
+    AuditLogPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer

@@ -1,4 +1,5 @@
-# Enabled vertical modules, in dependency order (company before employee).
+# Enabled vertical modules, in dependency order (company before employee before team).
 enabled:
   - company
   - employee
+  - team

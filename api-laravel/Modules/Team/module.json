@@ -1,0 +1,11 @@
+{
+    "name": "Team",
+    "alias": "team",
+    "description": "Teams, membership, team lead",
+    "keywords": [],
+    "priority": 30,
+    "providers": [
+        "Modules\\Team\\Providers\\TeamServiceProvider"
+    ],
+    "files": []
+}

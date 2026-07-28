@@ -2,5 +2,6 @@
     "Auth": true,
     "Core": true,
     "Company": true,
-    "Employee": true
+    "Employee": true,
+    "Team": true
 }

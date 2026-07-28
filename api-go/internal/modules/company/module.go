@@ -60,6 +60,13 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 			sub.Use(requireMember)
 			sub.Get("/", m.handler.ShowCompany)
 			sub.With(companyauth.RequirePermission("company.update")).Patch("/", m.handler.UpdateCompany)
+
+			sub.Get("/dashboard/me", m.handler.DashboardMe)
+			sub.Get("/dashboard/team", m.handler.DashboardTeam)
+			sub.Get("/dashboard/manager", m.handler.DashboardManager)
+			sub.Get("/dashboard/hr", m.handler.DashboardHR)
+
+			sub.With(companyauth.RequirePermission("adminland.access")).Get("/audit-logs", m.handler.ListAuditLogs)
 		})
 	})
 }

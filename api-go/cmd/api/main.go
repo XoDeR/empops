@@ -26,6 +26,7 @@ import (
 
 	_ "github.com/XoDeR/empops/api-go/internal/modules/company"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/employee"
+	_ "github.com/XoDeR/empops/api-go/internal/modules/team"
 )
 
 func main() {

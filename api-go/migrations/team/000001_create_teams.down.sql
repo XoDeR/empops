@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS employee_team;
+DROP TABLE IF EXISTS teams;

@@ -5,6 +5,7 @@ namespace Modules\Employee\Services;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Modules\Company\Models\Company;
+use Modules\Employee\Models\DirectReport;
 use Modules\Employee\Models\Employee;
 use RuntimeException;
 
@@ -43,7 +44,11 @@ final class EmployeeService
         $employee->save();
 
         if (isset($data['role'])) {
+            $keepManager = $employee->hasRole('manager');
             $employee->syncRoles([$data['role']]);
+            if ($keepManager) {
+                $employee->assignRole('manager');
+            }
         }
 
         return $employee->fresh(['position', 'status', 'roles']);
@@ -100,7 +105,24 @@ final class EmployeeService
      */
     public function employeePayload(Employee $employee, bool $includeInvite = false): array
     {
-        $employee->loadMissing(['position', 'status', 'roles']);
+        $employee->loadMissing([
+            'position',
+            'status',
+            'roles',
+            'teams',
+            'managerLinks.manager',
+            'managedReports',
+        ]);
+
+        $managers = $employee->managerLinks
+            ->map(fn (DirectReport $d) => [
+                'id' => (string) $d->manager->id,
+                'first_name' => $d->manager->first_name,
+                'last_name' => $d->manager->last_name,
+                'email' => $d->manager->email,
+            ])
+            ->values()
+            ->all();
 
         $payload = [
             'id' => (string) $employee->id,
@@ -121,6 +143,16 @@ final class EmployeeService
                 'type' => $employee->status->type,
             ] : null,
             'roles' => $employee->getRoleNames()->values()->all(),
+            'manager' => $managers[0] ?? null,
+            'managers' => $managers,
+            'teams' => $employee->teams
+                ->map(fn ($t) => [
+                    'id' => (string) $t->id,
+                    'name' => $t->name,
+                ])
+                ->values()
+                ->all(),
+            'is_manager' => $employee->hasRole('manager') || $employee->managedReports->isNotEmpty(),
         ];
 
         if ($includeInvite) {

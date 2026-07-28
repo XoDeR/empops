@@ -6,7 +6,10 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Company\Models\Company;
+use Modules\Team\Models\Team;
 use Spatie\Permission\Traits\HasRoles;
 
 class Employee extends Model
@@ -57,6 +60,21 @@ class Employee extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(EmployeeStatus::class, 'employee_status_id');
+    }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'employee_team')->withTimestamps();
+    }
+
+    public function managedReports(): HasMany
+    {
+        return $this->hasMany(DirectReport::class, 'manager_id');
+    }
+
+    public function managerLinks(): HasMany
+    {
+        return $this->hasMany(DirectReport::class, 'employee_id');
     }
 
     public function fullName(): string

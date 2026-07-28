@@ -686,10 +686,25 @@ func assignRole(ctx context.Context, q db, employeeID, roleName string) error {
 }
 
 func syncRole(ctx context.Context, q db, employeeID, roleName string) error {
+	var keepManager bool
+	_ = q.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM employee_roles er
+			JOIN roles r ON r.id = er.role_id
+			WHERE er.employee_id = $1 AND r.name = 'manager'
+		)`, employeeID,
+	).Scan(&keepManager)
+
 	if _, err := q.Exec(ctx, `DELETE FROM employee_roles WHERE employee_id = $1`, employeeID); err != nil {
 		return err
 	}
-	return assignRole(ctx, q, employeeID, roleName)
+	if err := assignRole(ctx, q, employeeID, roleName); err != nil {
+		return err
+	}
+	if keepManager {
+		return assignRole(ctx, q, employeeID, "manager")
+	}
+	return nil
 }
 
 func listEmployeeRoles(ctx context.Context, pool *pgxpool.Pool, employeeID string) ([]string, error) {
@@ -791,7 +806,86 @@ func employeePayload(ctx context.Context, pool *pgxpool.Pool, employeeID, compan
 		}
 	}
 
+	managers, err := listManagersForEmployee(ctx, pool, id)
+	if err != nil {
+		return nil, err
+	}
+	payload["managers"] = managers
+	if len(managers) > 0 {
+		payload["manager"] = managers[0]
+	} else {
+		payload["manager"] = nil
+	}
+
+	teams, err := listTeamsForEmployee(ctx, pool, id)
+	if err != nil {
+		return nil, err
+	}
+	payload["teams"] = teams
+
+	var isManager bool
+	for _, role := range roles {
+		if role == "manager" {
+			isManager = true
+			break
+		}
+	}
+	if !isManager {
+		_ = pool.QueryRow(ctx, `
+			SELECT EXISTS(SELECT 1 FROM direct_reports WHERE manager_id = $1)`, id,
+		).Scan(&isManager)
+	}
+	payload["is_manager"] = isManager
+
 	return payload, nil
+}
+
+func listManagersForEmployee(ctx context.Context, pool *pgxpool.Pool, employeeID string) ([]map[string]interface{}, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT e.id, e.first_name, e.last_name, e.email
+		FROM direct_reports dr
+		JOIN employees e ON e.id = dr.manager_id
+		WHERE dr.employee_id = $1
+		ORDER BY e.last_name, e.first_name`, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := []map[string]interface{}{}
+	for rows.Next() {
+		var id, first, last, email string
+		if err := rows.Scan(&id, &first, &last, &email); err != nil {
+			return nil, err
+		}
+		list = append(list, map[string]interface{}{
+			"id": id, "first_name": first, "last_name": last, "email": email,
+		})
+	}
+	return list, nil
+}
+
+func listTeamsForEmployee(ctx context.Context, pool *pgxpool.Pool, employeeID string) ([]map[string]interface{}, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT t.id, t.name
+		FROM employee_team et
+		JOIN teams t ON t.id = et.team_id
+		WHERE et.employee_id = $1
+		ORDER BY t.name`, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := []map[string]interface{}{}
+	for rows.Next() {
+		var id, name string
+		if err := rows.Scan(&id, &name); err != nil {
+			return nil, err
+		}
+		list = append(list, map[string]interface{}{"id": id, "name": name})
+	}
+	return list, nil
 }
 
 func formatDate(t *time.Time) interface{} {

@@ -6,6 +6,7 @@ use Modules\Company\Http\Middleware\EnsureCompanyMember;
 use Modules\Company\Http\Middleware\EnsurePermission;
 use Modules\Employee\Http\Controllers\EmployeeController;
 use Modules\Employee\Http\Controllers\EmployeeStatusController;
+use Modules\Employee\Http\Controllers\HierarchyController;
 use Modules\Employee\Http\Controllers\PositionController;
 
 Route::prefix('v1/companies/{companyId}')
@@ -22,6 +23,15 @@ Route::prefix('v1/companies/{companyId}')
             ->middleware(EnsurePermission::class.':employees.delete');
         Route::post('employees/{employeeId}/invite', [EmployeeController::class, 'invite'])
             ->middleware(EnsurePermission::class.':employees.invite');
+
+        Route::get('employees/{employeeId}/managers', [HierarchyController::class, 'managers'])
+            ->middleware(EnsurePermission::class.':employees.view');
+        Route::get('employees/{employeeId}/direct-reports', [HierarchyController::class, 'directReports'])
+            ->middleware(EnsurePermission::class.':employees.view');
+        Route::post('employees/{employeeId}/managers', [HierarchyController::class, 'assignManager'])
+            ->middleware(EnsurePermission::class.':hierarchy.assign');
+        Route::delete('employees/{employeeId}/managers/{managerId}', [HierarchyController::class, 'unassignManager'])
+            ->middleware(EnsurePermission::class.':hierarchy.assign');
 
         Route::get('positions', [PositionController::class, 'index'])
             ->middleware(EnsurePermission::class.':positions.view');

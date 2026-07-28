@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { authFetch } from '@/lib/authFetch'
 import { useCompanyContext } from '@/routes/CompanyLayout'
 import type { CompanyRole, Employee, EmployeeStatus, Position } from '@/types/api'
@@ -60,7 +60,8 @@ function EmployeeEditForm({
       hired_at: employee.hired_at ?? '',
       position_id: employee.position?.id ?? '',
       employee_status_id: employee.status?.id ?? '',
-      role: (employee.roles[0] as CompanyRole | undefined) ?? 'employee',
+      role:
+        (employee.roles.find((r) => r !== 'manager') as CompanyRole | undefined) ?? 'employee',
     },
   })
 
@@ -348,7 +349,12 @@ export default function EmployeesPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold">
-                      {employee.first_name} {employee.last_name}
+                      <Link
+                        to={`/companies/${companyId}/employees/${employee.id}`}
+                        className="hover:underline"
+                      >
+                        {employee.first_name} {employee.last_name}
+                      </Link>
                       {isSelf && <span className="ml-2 text-xs text-black/50">(you)</span>}
                       {employee.locked && (
                         <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">

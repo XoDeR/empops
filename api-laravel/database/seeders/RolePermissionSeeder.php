@@ -26,6 +26,12 @@ class RolePermissionSeeder extends Seeder
             'employee-statuses.create',
             'employee-statuses.update',
             'employee-statuses.delete',
+            'teams.view',
+            'teams.create',
+            'teams.update',
+            'teams.delete',
+            'teams.manage_members',
+            'hierarchy.assign',
         ];
 
         foreach ($permissions as $name) {
@@ -35,6 +41,7 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::findOrCreate('administrator', 'web');
         $hr = Role::findOrCreate('hr', 'web');
         $employee = Role::findOrCreate('employee', 'web');
+        Role::findOrCreate('manager', 'web');
 
         $admin->syncPermissions($permissions);
 
@@ -53,12 +60,19 @@ class RolePermissionSeeder extends Seeder
             'employee-statuses.create',
             'employee-statuses.update',
             'employee-statuses.delete',
+            'teams.view',
+            'teams.create',
+            'teams.update',
+            'teams.delete',
+            'teams.manage_members',
+            'hierarchy.assign',
         ]);
 
         $employee->syncPermissions([
             'employees.view',
             'positions.view',
             'employee-statuses.view',
+            'teams.view',
         ]);
     }
 }
