@@ -20,4 +20,4 @@ log:
 
 db:
   # Optional in Step 0 - the stub auth flow works without Postgres.
-  dsn: "postgres://empops:empops@localhost:5432/empops_dev?sslmode=disable"
+  dsn: "postgres://empops:empops@localhost:5433/empops_go?sslmode=disable"

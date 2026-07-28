@@ -8,7 +8,7 @@ API-first HR operations platform — Laravel and Go backends with a React SPA.
 | `api-go/` | Go DDD / modular parity backend (Chi + SQLC) |
 | `web-react/` | React 19 + Vite SPA |
 | `packages/api-types/` | Shared OpenAPI skeleton |
-| `docker-compose.yml` | Local Postgres |
+| `docker-compose.yml` | Local Postgres (Laravel + Go, separate volumes) |
 
 ## Step 0
 
@@ -21,8 +21,11 @@ Platform skeleton — see each part’s `docs/step-0.md`:
 ### Quick start
 
 ```bash
+# Postgres — Laravel :5432, Go :5433 (separate volumes)
+docker compose up -d postgres-laravel postgres-go
+
 # Laravel API :8000
-cd api-laravel && composer install && cp .env.example .env && php artisan key:generate && php artisan serve
+cd api-laravel && composer install && cp .env.example .env && php artisan key:generate && php artisan migrate && php artisan serve
 
 # Go API :8080 (optional parity)
 cd api-go && go run ./cmd/api
@@ -30,3 +33,8 @@ cd api-go && go run ./cmd/api
 # React :5173
 cd web-react && npm install && cp .env.example .env && npm run dev
 ```
+
+| Service | Host port | Database | Volume |
+|---|---|---|---|
+| `postgres-laravel` | 5432 | `empops_laravel` | `empops_laravel_pg` |
+| `postgres-go` | 5433 | `empops_go` (+ `empops_go_test`) | `empops_go_pg` |

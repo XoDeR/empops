@@ -13,9 +13,12 @@ Documents what Step 0 implements in `api-laravel/`.
 - Laravel 13 app scaffold in `api-laravel/`
 - Packages: `nwidart/laravel-modules`, `spatie/laravel-permission`, `spatie/laravel-medialibrary`, `firebase/php-jwt`
 - Modules: `Modules/Auth`, `Modules/Core` (enabled via `modules_statuses.json`)
-- `User` model uses `HasRoles` and `InteractsWithMedia` (ready for Step 1)
+- `User` model uses `HasUuids` (UUID v7), `HasRoles`, and `InteractsWithMedia`
+- Custom `Role` / `Permission` models extend Spatie with `HasUuids`
+- Migrations use `uuid('id')->primary()` and UUID morph/FK columns for Spatie pivots
+- `AppServiceProvider` calls `Builder::morphUsingUuids()`
 - Config: `config/jwt.php`, `config/cors.php`, published `permission` + `media-library` configs
-- Env docs: `.env.example` (JWT, CORS, file session/cache so API boots without DB drivers)
+- Env: PostgreSQL default (`empops_laravel` on `:5432`); Go uses a separate instance (`empops_go` on `:5433`)
 
 ### HTTP contract
 
@@ -50,8 +53,7 @@ JWT claims: `sub`, `jti`, `iat`, `exp`, `iss` (`empops`), `aud` (`empops-web`), 
 - Real users, password hashing, email verification, 2FA
 - OAuth / social logins
 - RBAC enforcement beyond package install
-- Media uploads
-- PostgreSQL as primary DB (sqlite config present; PDO sqlite may be missing locally)
+- Media uploads (Media Library package installed; media migration not published yet)
 - Full OpenAPI codegen (stub lives in `packages/api-types`)
 
 ## Verify

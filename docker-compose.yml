@@ -1,14 +1,37 @@
 services:
-  postgres:
+  postgres-laravel:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: empops
       POSTGRES_PASSWORD: empops
-      POSTGRES_DB: empops
+      POSTGRES_DB: empops_laravel
     ports:
       - "5432:5432"
     volumes:
-      - empops_pg:/var/lib/postgresql/data
+      - empops_laravel_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U empops -d empops_laravel"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-go:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: empops
+      POSTGRES_PASSWORD: empops
+      POSTGRES_DB: empops_go
+    ports:
+      - "5433:5432"
+    volumes:
+      - empops_go_pg:/var/lib/postgresql/data
+      - ./docker/postgres/01-init-go-databases.sql:/docker-entrypoint-initdb.d/01-init-go-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U empops -d empops_go"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  empops_pg:
+  empops_laravel_pg:
+  empops_go_pg:

@@ -19,4 +19,4 @@ log:
   level: warn
 
 db:
-  dsn: "postgres://empops:empops@localhost:5432/empops_test?sslmode=disable"
+  dsn: "postgres://empops:empops@localhost:5433/empops_go_test?sslmode=disable"
