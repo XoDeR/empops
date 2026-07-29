@@ -109,9 +109,116 @@ export type Team = {
   member_count: number
 }
 
+export type DashboardWidget =
+  | {
+      type: 'worklog_today'
+      data: {
+        logged: boolean
+        worklog: Worklog | null
+        consecutive_missed: number
+      }
+    }
+  | {
+      type: 'active_question'
+      data: { id: string; title: string; answered: boolean } | null
+    }
+  | {
+      type: 'unread_notifications'
+      data: { count: number }
+    }
+
+export type Worklog = {
+  id: string
+  company_id: string
+  employee_id: string
+  content: string
+  logged_on: string
+  created_at?: string
+  updated_at?: string
+  employee?: EmployeeSummary | null
+}
+
+export type CompanyNews = {
+  id: string
+  company_id: string
+  author_id: string | null
+  author_name: string
+  title: string
+  content: string
+  created_at?: string
+  updated_at?: string
+}
+
+export type TeamNews = {
+  id: string
+  company_id: string
+  team_id: string
+  author_id: string | null
+  author_name: string
+  title: string
+  content: string
+  created_at?: string
+  updated_at?: string
+}
+
+export type Ship = {
+  id: string
+  company_id: string
+  team_id: string
+  author_id: string | null
+  author_name: string
+  title: string
+  description: string | null
+  employees: EmployeeSummary[]
+  created_at?: string
+  updated_at?: string
+}
+
+export type AppNotification = {
+  id: string
+  company_id: string
+  employee_id: string
+  action: string
+  objects: Record<string, unknown>
+  read: boolean
+  read_at: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export type NotificationList = {
+  items: AppNotification[]
+  unread_count: number
+}
+
+export type Answer = {
+  id: string
+  question_id: string
+  employee_id: string
+  body: string
+  employee?: EmployeeSummary | null
+  created_at?: string
+  updated_at?: string
+}
+
+export type Question = {
+  id: string
+  company_id: string
+  title: string
+  active: boolean
+  activated_at?: string | null
+  deactivated_at?: string | null
+  answer_count?: number
+  answers?: Answer[]
+  my_answer?: Answer | null
+  answered?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
 export type DashboardShell = {
   view: 'me' | 'team' | 'manager' | 'hr'
-  widgets: unknown[]
+  widgets: DashboardWidget[]
   flags: {
     is_manager: boolean
     can_manage_hr: boolean

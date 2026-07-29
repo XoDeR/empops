@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS employee_ship;
+DROP TABLE IF EXISTS ships;
+DROP TABLE IF EXISTS team_news;

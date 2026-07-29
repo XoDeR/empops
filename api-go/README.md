@@ -4,10 +4,11 @@ Go backend for EmpOps, following modular DDD architecture (Clean Architecture
 layers for Core + vertical modules for feature slices).
 
 **Step 1** (auth, RBAC, companies, employees), **Step 2** (teams, hierarchy),
-and **Step 3** (uploads, media, places) are implemented — see
-[`docs/step-1.md`](docs/step-1.md), [`docs/step-2.md`](docs/step-2.md), and
-[`docs/step-3.md`](docs/step-3.md). Step 0 skeleton notes remain in
-[`docs/step-0.md`](docs/step-0.md).
+**Step 3** (uploads, media, places), and **Step 4** (worklogs, company/team
+news, ships, notifications, Q&A) are implemented — see
+[`docs/step-1.md`](docs/step-1.md), [`docs/step-2.md`](docs/step-2.md),
+[`docs/step-3.md`](docs/step-3.md), and [`docs/step-4.md`](docs/step-4.md).
+Step 0 skeleton notes remain in [`docs/step-0.md`](docs/step-0.md).
 
 ## Requirements
 
@@ -19,8 +20,9 @@ and **Step 3** (uploads, media, places) are implemented — see
 
 ```
 cmd/api        composition root: config + JWT + auth + Chi router + module registry
-cmd/migrate    namespaced SQL migration runner (core / company / employee)
+cmd/migrate    namespaced SQL migration runner (core / company / employee / ...)
 cmd/worker     background job / cron process (stub: heartbeat only)
+cmd/missed-worklogs  daily job: increments consecutive_worklog_missed (see docs/step-4.md)
 config/        app.dev.yaml, app.test.yaml, modules.yaml
 migrations/    namespaced *.up.sql / *.down.sql per module (core/, company/, employee/)
 schema/        CREATE TABLE DDL for sqlc only (keep in sync with migrations)

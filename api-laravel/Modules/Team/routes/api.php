@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Route;
 use Modules\Auth\Http\Middleware\AuthenticateJwt;
 use Modules\Company\Http\Middleware\EnsureCompanyMember;
 use Modules\Company\Http\Middleware\EnsurePermission;
+use Modules\Team\Http\Controllers\ShipController;
 use Modules\Team\Http\Controllers\TeamController;
+use Modules\Team\Http\Controllers\TeamNewsController;
 
 Route::prefix('v1/companies/{companyId}')
     ->middleware([AuthenticateJwt::class, EnsureCompanyMember::class])
@@ -26,4 +28,15 @@ Route::prefix('v1/companies/{companyId}')
             ->middleware(EnsurePermission::class.':teams.manage_members');
         Route::put('teams/{teamId}/lead', [TeamController::class, 'setLead'])
             ->middleware(EnsurePermission::class.':teams.manage_members');
+
+        Route::get('teams/{teamId}/news', [TeamNewsController::class, 'index']);
+        Route::post('teams/{teamId}/news', [TeamNewsController::class, 'store']);
+        Route::get('teams/{teamId}/news/{newsId}', [TeamNewsController::class, 'show']);
+        Route::patch('teams/{teamId}/news/{newsId}', [TeamNewsController::class, 'update']);
+        Route::delete('teams/{teamId}/news/{newsId}', [TeamNewsController::class, 'destroy']);
+
+        Route::get('teams/{teamId}/ships', [ShipController::class, 'index']);
+        Route::post('teams/{teamId}/ships', [ShipController::class, 'store']);
+        Route::get('teams/{teamId}/ships/{shipId}', [ShipController::class, 'show']);
+        Route::delete('teams/{teamId}/ships/{shipId}', [ShipController::class, 'destroy']);
     });

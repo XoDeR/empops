@@ -5,5 +5,6 @@
     "Employee": true,
     "Team": true,
     "Uploads": true,
-    "Place": true
+    "Place": true,
+    "Notification": true
 }

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { authFetch } from '@/lib/authFetch'
 import { useCompanyContext } from '@/routes/CompanyLayout'
-import type { Employee, Team } from '@/types/api'
+import type { Employee, Ship, Team, TeamNews } from '@/types/api'
 
 export default function TeamDetailPage() {
   const { companyId, teamId } = useParams<{ companyId: string; teamId: string }>()
@@ -13,6 +13,11 @@ export default function TeamDetailPage() {
   const [memberId, setMemberId] = useState('')
   const [leadId, setLeadId] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [newsTitle, setNewsTitle] = useState('')
+  const [newsContent, setNewsContent] = useState('')
+  const [shipTitle, setShipTitle] = useState('')
+  const [shipDescription, setShipDescription] = useState('')
+  const [shipEmployeeIds, setShipEmployeeIds] = useState<string[]>([])
 
   const teamQuery = useQuery({
     queryKey: ['team', companyId, teamId],
@@ -30,6 +35,24 @@ export default function TeamDetailPage() {
       return res.data
     },
     enabled: Boolean(companyId) && isHrOrAdmin,
+  })
+
+  const newsQuery = useQuery({
+    queryKey: ['team-news', companyId, teamId],
+    queryFn: async () => {
+      const res = await authFetch<TeamNews[]>(`/companies/${companyId}/teams/${teamId}/news`)
+      return res.data
+    },
+    enabled: Boolean(companyId && teamId),
+  })
+
+  const shipsQuery = useQuery({
+    queryKey: ['ships', companyId, teamId],
+    queryFn: async () => {
+      const res = await authFetch<Ship[]>(`/companies/${companyId}/teams/${teamId}/ships`)
+      return res.data
+    },
+    enabled: Boolean(companyId && teamId),
   })
 
   const invalidate = () => {
@@ -85,6 +108,68 @@ export default function TeamDetailPage() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['teams', companyId] })
       navigate(`/companies/${companyId}/teams`)
+    },
+    onError: (e: Error) => setError(e.message),
+  })
+
+  const createNews = useMutation({
+    mutationFn: async () => {
+      await authFetch(`/companies/${companyId}/teams/${teamId}/news`, {
+        method: 'POST',
+        body: JSON.stringify({ title: newsTitle, content: newsContent }),
+      })
+    },
+    onSuccess: () => {
+      setNewsTitle('')
+      setNewsContent('')
+      setError(null)
+      void qc.invalidateQueries({ queryKey: ['team-news', companyId, teamId] })
+    },
+    onError: (e: Error) => setError(e.message),
+  })
+
+  const deleteNews = useMutation({
+    mutationFn: async (newsId: string) => {
+      await authFetch(`/companies/${companyId}/teams/${teamId}/news/${newsId}`, {
+        method: 'DELETE',
+      })
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['team-news', companyId, teamId] })
+    },
+    onError: (e: Error) => setError(e.message),
+  })
+
+  const createShip = useMutation({
+    mutationFn: async () => {
+      await authFetch(`/companies/${companyId}/teams/${teamId}/ships`, {
+        method: 'POST',
+        body: JSON.stringify({
+          title: shipTitle,
+          description: shipDescription || null,
+          employee_ids: shipEmployeeIds,
+        }),
+      })
+    },
+    onSuccess: () => {
+      setShipTitle('')
+      setShipDescription('')
+      setShipEmployeeIds([])
+      setError(null)
+      void qc.invalidateQueries({ queryKey: ['ships', companyId, teamId] })
+      void qc.invalidateQueries({ queryKey: ['notifications', companyId] })
+    },
+    onError: (e: Error) => setError(e.message),
+  })
+
+  const deleteShip = useMutation({
+    mutationFn: async (shipId: string) => {
+      await authFetch(`/companies/${companyId}/teams/${teamId}/ships/${shipId}`, {
+        method: 'DELETE',
+      })
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['ships', companyId, teamId] })
     },
     onError: (e: Error) => setError(e.message),
   })
@@ -149,6 +234,131 @@ export default function TeamDetailPage() {
             <li className="text-sm text-black/50">No members yet.</li>
           )}
         </ul>
+      </section>
+
+      <section className="space-y-3 rounded-2xl border border-black/10 bg-white/70 p-4">
+        <h3 className="font-medium">Team news</h3>
+        <ul className="space-y-2">
+          {(newsQuery.data ?? []).map((n) => (
+            <li key={n.id} className="rounded-lg border border-black/5 p-3 text-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-medium">{n.title}</p>
+                  <p className="mt-1 whitespace-pre-wrap text-black/70">{n.content}</p>
+                  <p className="mt-1 text-xs text-black/45">by {n.author_name}</p>
+                </div>
+                <button
+                  type="button"
+                  className="text-xs text-red-700 hover:underline"
+                  onClick={() => deleteNews.mutate(n.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          ))}
+          {(newsQuery.data ?? []).length === 0 && (
+            <li className="text-sm text-black/50">No team news yet.</li>
+          )}
+        </ul>
+        <div className="space-y-2 border-t border-black/5 pt-3">
+          <input
+            className="w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-sm"
+            placeholder="Title"
+            value={newsTitle}
+            onChange={(e) => setNewsTitle(e.target.value)}
+          />
+          <textarea
+            className="w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-sm"
+            rows={2}
+            placeholder="What’s new for the team?"
+            value={newsContent}
+            onChange={(e) => setNewsContent(e.target.value)}
+          />
+          <button
+            type="button"
+            disabled={!newsTitle.trim() || !newsContent.trim() || createNews.isPending}
+            className="rounded-lg bg-[var(--empops-accent)] px-3 py-1.5 text-sm text-white disabled:opacity-60"
+            onClick={() => createNews.mutate()}
+          >
+            Post news
+          </button>
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-2xl border border-black/10 bg-white/70 p-4">
+        <h3 className="font-medium">Recent ships</h3>
+        <ul className="space-y-2">
+          {(shipsQuery.data ?? []).map((s) => (
+            <li key={s.id} className="rounded-lg border border-black/5 p-3 text-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-medium">{s.title}</p>
+                  {s.description && (
+                    <p className="mt-1 whitespace-pre-wrap text-black/70">{s.description}</p>
+                  )}
+                  <p className="mt-1 text-xs text-black/45">
+                    by {s.author_name}
+                    {s.employees.length > 0 &&
+                      ` · ${s.employees.map((e) => `${e.first_name} ${e.last_name}`).join(', ')}`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="text-xs text-red-700 hover:underline"
+                  onClick={() => deleteShip.mutate(s.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          ))}
+          {(shipsQuery.data ?? []).length === 0 && (
+            <li className="text-sm text-black/50">No ships yet.</li>
+          )}
+        </ul>
+        <div className="space-y-2 border-t border-black/5 pt-3">
+          <input
+            className="w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-sm"
+            placeholder="What shipped?"
+            value={shipTitle}
+            onChange={(e) => setShipTitle(e.target.value)}
+          />
+          <textarea
+            className="w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-sm"
+            rows={2}
+            placeholder="Optional description"
+            value={shipDescription}
+            onChange={(e) => setShipDescription(e.target.value)}
+          />
+          <div className="flex flex-wrap gap-2">
+            {team.members.map((m) => {
+              const checked = shipEmployeeIds.includes(m.id)
+              return (
+                <label key={m.id} className="flex items-center gap-1.5 text-xs text-black/70">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() =>
+                      setShipEmployeeIds((ids) =>
+                        checked ? ids.filter((id) => id !== m.id) : [...ids, m.id],
+                      )
+                    }
+                  />
+                  {m.first_name} {m.last_name}
+                </label>
+              )
+            })}
+          </div>
+          <button
+            type="button"
+            disabled={!shipTitle.trim() || createShip.isPending}
+            className="rounded-lg bg-[var(--empops-accent)] px-3 py-1.5 text-sm text-white disabled:opacity-60"
+            onClick={() => createShip.mutate()}
+          >
+            Log ship
+          </button>
+        </div>
       </section>
 
       {isHrOrAdmin && (

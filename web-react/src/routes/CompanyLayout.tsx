@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet, useOutletContext, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { NotificationBell } from '@/components/NotificationBell'
 import { authFetch } from '@/lib/authFetch'
 import { useCompanyStore } from '@/stores/company'
 import type { CompanyMembership } from '@/types/api'
@@ -60,9 +61,12 @@ export default function CompanyLayout() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm text-black/50">Company</p>
-        <h1 className="text-2xl font-semibold">{company.name}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm text-black/50">Company</p>
+          <h1 className="text-2xl font-semibold">{company.name}</h1>
+        </div>
+        {companyId && <NotificationBell companyId={companyId} />}
       </div>
 
       <nav className="flex flex-wrap gap-4 border-b border-black/10 text-sm">

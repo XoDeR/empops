@@ -36,6 +36,7 @@ class Employee extends Model implements HasMedia
         'invitation_link',
         'invitation_used_at',
         'locked',
+        'consecutive_worklog_missed',
     ];
 
     protected function casts(): array
@@ -44,6 +45,7 @@ class Employee extends Model implements HasMedia
             'hired_at' => 'date',
             'invitation_used_at' => 'datetime',
             'locked' => 'boolean',
+            'consecutive_worklog_missed' => 'integer',
         ];
     }
 
@@ -85,6 +87,11 @@ class Employee extends Model implements HasMedia
     public function places(): MorphMany
     {
         return $this->morphMany(Place::class, 'placable');
+    }
+
+    public function worklogs(): HasMany
+    {
+        return $this->hasMany(Worklog::class);
     }
 
     public function registerMediaCollections(): void

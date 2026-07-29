@@ -5,3 +5,4 @@ enabled:
   - team
   - place
   - media
+  - notification

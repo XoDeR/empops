@@ -67,6 +67,27 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 			sub.Get("/dashboard/hr", m.handler.DashboardHR)
 
 			sub.With(companyauth.RequirePermission("adminland.access")).Get("/audit-logs", m.handler.ListAuditLogs)
+
+			// Company news: any member may read; create/update/delete are permission-gated.
+			sub.Get("/news", m.handler.ListCompanyNews)
+			sub.With(companyauth.RequirePermission("news.create")).Post("/news", m.handler.CreateCompanyNews)
+			sub.Get("/news/{newsId}", m.handler.ShowCompanyNews)
+			sub.With(companyauth.RequirePermission("news.update")).Patch("/news/{newsId}", m.handler.UpdateCompanyNews)
+			sub.With(companyauth.RequirePermission("news.delete")).Delete("/news/{newsId}", m.handler.DeleteCompanyNews)
+
+			// Q&A: reads open to any member; writes permission-gated (answers
+			// are self-or-permission, checked in the handler).
+			sub.Get("/questions", m.handler.ListQuestions)
+			sub.Get("/questions/active", m.handler.ActiveQuestion)
+			sub.Get("/questions/{questionId}", m.handler.ShowQuestion)
+			sub.With(companyauth.RequirePermission("questions.create")).Post("/questions", m.handler.CreateQuestion)
+			sub.With(companyauth.RequirePermission("questions.update")).Patch("/questions/{questionId}", m.handler.UpdateQuestion)
+			sub.With(companyauth.RequirePermission("questions.delete")).Delete("/questions/{questionId}", m.handler.DeleteQuestion)
+			sub.With(companyauth.RequirePermission("questions.manage")).Put("/questions/{questionId}/activate", m.handler.ActivateQuestion)
+			sub.With(companyauth.RequirePermission("questions.manage")).Put("/questions/{questionId}/deactivate", m.handler.DeactivateQuestion)
+			sub.Post("/questions/{questionId}/answers", m.handler.CreateAnswer)
+			sub.Patch("/questions/{questionId}/answers/{answerId}", m.handler.UpdateAnswer)
+			sub.Delete("/questions/{questionId}/answers/{answerId}", m.handler.DeleteAnswer)
 		})
 	})
 }

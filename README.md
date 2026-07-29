@@ -37,6 +37,22 @@ Org chart–aware HRIS: teams (members/lead), manager/direct reports, dashboard 
 - [web-react/docs/step-2.md](web-react/docs/step-2.md)
 - OpenAPI: [packages/api-types/openapi/v1.yaml](packages/api-types/openapi/v1.yaml)
 
+## Step 3 — Media uploads + places
+
+Profiles and companies with avatars/logos and addresses.
+
+- [api-laravel/docs/step-3.md](api-laravel/docs/step-3.md)
+- [api-go/docs/step-3.md](api-go/docs/step-3.md)
+- [web-react/docs/step-3.md](web-react/docs/step-3.md)
+
+## Step 4 — Communicate (core collaboration)
+
+Worklogs, company/team news, ships, in-app notifications, Q&A.
+
+- [api-laravel/docs/step-4.md](api-laravel/docs/step-4.md)
+- [api-go/docs/step-4.md](api-go/docs/step-4.md)
+- [web-react/docs/step-4.md](web-react/docs/step-4.md)
+
 ### Quick start
 
 ```bash

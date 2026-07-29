@@ -2,6 +2,7 @@
 
 namespace Modules\Employee\Providers;
 
+use Modules\Employee\Console\MarkMissedWorklogsCommand;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 
 class EmployeeServiceProvider extends ModuleServiceProvider
@@ -13,4 +14,15 @@ class EmployeeServiceProvider extends ModuleServiceProvider
     protected array $providers = [
         RouteServiceProvider::class,
     ];
+
+    public function boot(): void
+    {
+        parent::boot();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                MarkMissedWorklogsCommand::class,
+            ]);
+        }
+    }
 }

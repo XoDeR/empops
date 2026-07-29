@@ -75,6 +75,14 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 		sub.With(companyauth.RequirePermission("employee-statuses.create")).Post("/companies/{companyId}/employee-statuses", m.handler.CreateEmployeeStatus)
 		sub.With(companyauth.RequirePermission("employee-statuses.update")).Patch("/companies/{companyId}/employee-statuses/{statusId}", m.handler.UpdateEmployeeStatus)
 		sub.With(companyauth.RequirePermission("employee-statuses.delete")).Delete("/companies/{companyId}/employee-statuses/{statusId}", m.handler.DeleteEmployeeStatus)
+
+		// Worklogs: self-or-manager-or-permission checks happen in the handlers
+		// (mirrors the place module's self-or-permission pattern), so no
+		// route-level RequirePermission is applied here.
+		sub.Post("/companies/{companyId}/worklogs", m.handler.CreateWorklog)
+		sub.Get("/companies/{companyId}/employees/{employeeId}/worklogs", m.handler.ListEmployeeWorklogs)
+		sub.Delete("/companies/{companyId}/employees/{employeeId}/worklogs/{worklogId}", m.handler.DeleteWorklog)
+		sub.Get("/companies/{companyId}/teams/{teamId}/worklogs", m.handler.ListTeamWorklogs)
 	})
 }
 

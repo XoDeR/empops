@@ -55,6 +55,19 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 		sub.With(companyauth.RequirePermission("teams.manage_members")).Post("/companies/{companyId}/teams/{teamId}/members/{employeeId}", m.handler.AddMember)
 		sub.With(companyauth.RequirePermission("teams.manage_members")).Delete("/companies/{companyId}/teams/{teamId}/members/{employeeId}", m.handler.RemoveMember)
 		sub.With(companyauth.RequirePermission("teams.manage_members")).Put("/companies/{companyId}/teams/{teamId}/lead", m.handler.SetLead)
+
+		// Team news: team-member-or-permission checks happen in the handlers.
+		sub.Get("/companies/{companyId}/teams/{teamId}/news", m.handler.ListTeamNews)
+		sub.Post("/companies/{companyId}/teams/{teamId}/news", m.handler.CreateTeamNews)
+		sub.Get("/companies/{companyId}/teams/{teamId}/news/{newsId}", m.handler.ShowTeamNews)
+		sub.Patch("/companies/{companyId}/teams/{teamId}/news/{newsId}", m.handler.UpdateTeamNews)
+		sub.Delete("/companies/{companyId}/teams/{teamId}/news/{newsId}", m.handler.DeleteTeamNews)
+
+		// Ships: team-member-or-permission checks happen in the handlers.
+		sub.Get("/companies/{companyId}/teams/{teamId}/ships", m.handler.ListShips)
+		sub.Post("/companies/{companyId}/teams/{teamId}/ships", m.handler.CreateShip)
+		sub.Get("/companies/{companyId}/teams/{teamId}/ships/{shipId}", m.handler.ShowShip)
+		sub.Delete("/companies/{companyId}/teams/{teamId}/ships/{shipId}", m.handler.DeleteShip)
 	})
 }
 

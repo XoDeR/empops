@@ -1,0 +1,11 @@
+{
+    "name": "Notification",
+    "alias": "notification",
+    "description": "In-app employee notifications",
+    "keywords": [],
+    "priority": 35,
+    "providers": [
+        "Modules\\Notification\\Providers\\NotificationServiceProvider"
+    ],
+    "files": []
+}

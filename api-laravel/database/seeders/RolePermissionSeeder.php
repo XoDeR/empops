@@ -37,6 +37,24 @@ class RolePermissionSeeder extends Seeder
             'places.update',
             'places.delete',
             'countries.view',
+            'worklogs.view',
+            'worklogs.delete',
+            'news.view',
+            'news.create',
+            'news.update',
+            'news.delete',
+            'team-news.view',
+            'team-news.create',
+            'team-news.update',
+            'team-news.delete',
+            'ships.view',
+            'ships.create',
+            'ships.delete',
+            'questions.view',
+            'questions.create',
+            'questions.update',
+            'questions.delete',
+            'questions.manage',
         ];
 
         foreach ($permissions as $name) {
@@ -76,6 +94,24 @@ class RolePermissionSeeder extends Seeder
             'places.update',
             'places.delete',
             'countries.view',
+            'worklogs.view',
+            'worklogs.delete',
+            'news.view',
+            'news.create',
+            'news.update',
+            'news.delete',
+            'team-news.view',
+            'team-news.create',
+            'team-news.update',
+            'team-news.delete',
+            'ships.view',
+            'ships.create',
+            'ships.delete',
+            'questions.view',
+            'questions.create',
+            'questions.update',
+            'questions.delete',
+            'questions.manage',
         ]);
 
         $employee->syncPermissions([
@@ -85,6 +121,13 @@ class RolePermissionSeeder extends Seeder
             'teams.view',
             'places.view',
             'countries.view',
+            'worklogs.view',
+            'news.view',
+            'team-news.view',
+            'team-news.create',
+            'ships.view',
+            'ships.create',
+            'questions.view',
         ]);
     }
 }

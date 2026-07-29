@@ -8,6 +8,7 @@ use Modules\Employee\Http\Controllers\EmployeeController;
 use Modules\Employee\Http\Controllers\EmployeeStatusController;
 use Modules\Employee\Http\Controllers\HierarchyController;
 use Modules\Employee\Http\Controllers\PositionController;
+use Modules\Employee\Http\Controllers\WorklogController;
 
 Route::prefix('v1/companies/{companyId}')
     ->middleware([AuthenticateJwt::class, EnsureCompanyMember::class])
@@ -24,6 +25,11 @@ Route::prefix('v1/companies/{companyId}')
         Route::post('employees/{employeeId}/invite', [EmployeeController::class, 'invite'])
             ->middleware(EnsurePermission::class.':employees.invite');
         Route::put('employees/{employeeId}/avatar', [\Modules\Employee\Http\Controllers\EmployeeAvatarController::class, 'update']);
+
+        Route::post('worklogs', [WorklogController::class, 'store']);
+        Route::get('employees/{employeeId}/worklogs', [WorklogController::class, 'indexForEmployee']);
+        Route::delete('employees/{employeeId}/worklogs/{worklogId}', [WorklogController::class, 'destroy']);
+        Route::get('teams/{teamId}/worklogs', [WorklogController::class, 'indexForTeam']);
 
         Route::get('employees/{employeeId}/managers', [HierarchyController::class, 'managers'])
             ->middleware(EnsurePermission::class.':employees.view');
