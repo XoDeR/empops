@@ -3,6 +3,9 @@ import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { authFetch } from '@/lib/authFetch'
 import { useCompanyContext } from '@/routes/CompanyLayout'
+import { ImageUploadField } from '@/components/ImageUploadField'
+import { PlacesSection } from '@/components/PlacesSection'
+import { resolveMediaUrl } from '@/lib/mediaUrl'
 import type { Employee, EmployeeSummary } from '@/types/api'
 
 export default function EmployeeDetailPage() {
@@ -87,6 +90,9 @@ export default function EmployeeDetailPage() {
 
   const employee = employeeQuery.data
   const isSelf = employee.id === company.employee_id
+  const canEditAvatar = isSelf || isHrOrAdmin
+  const canEditPlaces = isSelf || isHrOrAdmin
+  const avatarUrl = resolveMediaUrl(employee.avatar_url)
   const managers = employee.managers ?? (employee.manager ? [employee.manager] : [])
   const managerIds = new Set(managers.map((m) => m.id))
   const managerCandidates = (employeesQuery.data ?? []).filter(
@@ -109,9 +115,14 @@ export default function EmployeeDetailPage() {
         >
           ← Employees
         </Link>
-        <h2 className="mt-2 text-xl font-semibold">
-          {employee.first_name} {employee.last_name}
-          {isSelf && <span className="ml-2 text-sm font-normal text-black/45">(you)</span>}
+        <h2 className="mt-2 text-xl font-semibold flex items-center gap-3">
+          {avatarUrl && (
+            <img src={avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+          )}
+          <span>
+            {employee.first_name} {employee.last_name}
+            {isSelf && <span className="ml-2 text-sm font-normal text-black/45">(you)</span>}
+          </span>
         </h2>
         <p className="text-sm text-black/55">{employee.email}</p>
       </div>
@@ -130,20 +141,44 @@ export default function EmployeeDetailPage() {
       )}
 
       {tab === 'profile' && (
-        <div className="rounded-2xl border border-black/10 bg-white/70 p-4 text-sm space-y-2">
-          <p>
-            <span className="text-black/50">Position:</span>{' '}
-            {employee.position?.title ?? '—'}
-          </p>
-          <p>
-            <span className="text-black/50">Status:</span> {employee.status?.name ?? '—'}
-          </p>
-          <p>
-            <span className="text-black/50">Roles:</span> {employee.roles.join(', ')}
-          </p>
-          <p>
-            <span className="text-black/50">Hired:</span> {employee.hired_at ?? '—'}
-          </p>
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-black/10 bg-white/70 p-4 text-sm space-y-4">
+            {canEditAvatar && companyId && employeeId && (
+              <ImageUploadField
+                label="Avatar"
+                imageUrl={employee.avatar_url}
+                disabled={!canEditAvatar}
+                onUpload={async (ids) => {
+                  await authFetch(`/companies/${companyId}/employees/${employeeId}/avatar`, {
+                    method: 'PUT',
+                    body: JSON.stringify(ids),
+                  })
+                  invalidate()
+                }}
+              />
+            )}
+            <p>
+              <span className="text-black/50">Position:</span>{' '}
+              {employee.position?.title ?? '—'}
+            </p>
+            <p>
+              <span className="text-black/50">Status:</span> {employee.status?.name ?? '—'}
+            </p>
+            <p>
+              <span className="text-black/50">Roles:</span> {employee.roles.join(', ')}
+            </p>
+            <p>
+              <span className="text-black/50">Hired:</span> {employee.hired_at ?? '—'}
+            </p>
+          </div>
+
+          {companyId && employeeId && (
+            <PlacesSection
+              companyId={companyId}
+              employeeId={employeeId}
+              canEdit={canEditPlaces}
+            />
+          )}
         </div>
       )}
 

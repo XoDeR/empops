@@ -29,7 +29,11 @@ import (
 
 	_ "github.com/XoDeR/empops/api-go/internal/modules/company"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/employee"
+	_ "github.com/XoDeR/empops/api-go/internal/modules/media"
+	_ "github.com/XoDeR/empops/api-go/internal/modules/place"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/team"
+
+	mediahttp "github.com/XoDeR/empops/api-go/internal/modules/media/adapter/http"
 )
 
 func main() {
@@ -114,6 +118,8 @@ func run() error {
 		return fmt.Errorf("upload: create upload service: %w", err)
 	}
 
+	mediaHandler := mediahttp.NewHandler(pool, uploadDir)
+
 	uploadRoutes := func(up chi.Router) {
 		up.Use(uploadSvc.RateLimiter().Middleware)
 
@@ -124,7 +130,7 @@ func run() error {
 		cm := uploadSvc.ChunkedManager()
 		up.Post("/init", cm.InitiateUpload)
 		up.Post("/chunk", cm.UploadChunk)
-		up.Post("/complete", cm.CompleteUpload)
+		up.Post("/complete", mediaHandler.WrapComplete(cm))
 		up.Get("/status", cm.GetUploadStatus)
 
 		// Optional: SSE progress (primarily used by stream uploader).

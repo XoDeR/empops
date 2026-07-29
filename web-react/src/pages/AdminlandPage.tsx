@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
 import { authFetch } from '@/lib/authFetch'
 import { useCompanyContext } from '@/routes/CompanyLayout'
+import { ImageUploadField } from '@/components/ImageUploadField'
 import type { EmployeeStatus, EmployeeStatusType, Position } from '@/types/api'
 
 const settingsSchema = z.object({
@@ -91,6 +92,18 @@ function CompanySettingsSection({ companyId }: { companyId: string }) {
           )}
         </div>
       </form>
+      <ImageUploadField
+        label="Company logo"
+        imageUrl={company.logo_url}
+        onUpload={async (ids) => {
+          await authFetch(`/companies/${companyId}/logo`, {
+            method: 'PUT',
+            body: JSON.stringify(ids),
+          })
+          void queryClient.invalidateQueries({ queryKey: ['company', companyId] })
+          void queryClient.invalidateQueries({ queryKey: ['companies'] })
+        }}
+      />
       {company.code_to_join_company && (
         <p className="text-sm text-black/60">
           Join code:{' '}

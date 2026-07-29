@@ -23,6 +23,7 @@ Route::prefix('v1/companies/{companyId}')
             ->middleware(EnsurePermission::class.':employees.delete');
         Route::post('employees/{employeeId}/invite', [EmployeeController::class, 'invite'])
             ->middleware(EnsurePermission::class.':employees.invite');
+        Route::put('employees/{employeeId}/avatar', [\Modules\Employee\Http\Controllers\EmployeeAvatarController::class, 'update']);
 
         Route::get('employees/{employeeId}/managers', [HierarchyController::class, 'managers'])
             ->middleware(EnsurePermission::class.':employees.view');

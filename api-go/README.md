@@ -3,8 +3,10 @@
 Go backend for EmpOps, following modular DDD architecture (Clean Architecture
 layers for Core + vertical modules for feature slices).
 
-**Step 1** (auth, RBAC, companies, employees) is implemented — see
-[`docs/step-1.md`](docs/step-1.md). Step 0 skeleton notes remain in
+**Step 1** (auth, RBAC, companies, employees), **Step 2** (teams, hierarchy),
+and **Step 3** (uploads, media, places) are implemented — see
+[`docs/step-1.md`](docs/step-1.md), [`docs/step-2.md`](docs/step-2.md), and
+[`docs/step-3.md`](docs/step-3.md). Step 0 skeleton notes remain in
 [`docs/step-0.md`](docs/step-0.md).
 
 ## Requirements

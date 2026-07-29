@@ -109,11 +109,14 @@ final class CompanyService
      */
     public function companyPayload(Company $company, bool $includeJoinCode = false): array
     {
+        $company->loadMissing('media');
+
         $payload = [
             'id' => (string) $company->id,
             'name' => $company->name,
             'slug' => $company->slug,
             'currency' => $company->currency,
+            'logo_url' => $company->getFirstMediaUrl('logo') ?: null,
         ];
 
         if ($includeJoinCode) {

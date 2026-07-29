@@ -18,6 +18,7 @@ import (
 
 	"github.com/XoDeR/empops/api-go/pkg/companyauth"
 	"github.com/XoDeR/empops/api-go/pkg/httpauth"
+	"github.com/XoDeR/empops/api-go/pkg/mediaurl"
 	"github.com/XoDeR/empops/api-go/pkg/response"
 	"github.com/XoDeR/empops/api-go/pkg/uuidv7"
 )
@@ -111,7 +112,7 @@ func (h *Handler) ListCompanies(w http.ResponseWriter, r *http.Request) {
 			response.Fail(w, http.StatusInternalServerError, "roles lookup failed", err.Error())
 			return
 		}
-		item := companyPayload(c, false)
+		item := companyPayload(r.Context(), h.pool, c, false)
 		item["employee_id"] = employeeID
 		item["roles"] = roles
 		list = append(list, item)
@@ -235,7 +236,7 @@ func (h *Handler) CreateCompany(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Created(w, "Company created", map[string]interface{}{
-		"company":  companyPayload(company, true),
+		"company":  companyPayload(r.Context(), h.pool, company, true),
 		"employee": payload,
 	})
 }
@@ -345,7 +346,7 @@ func (h *Handler) JoinCompany(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, "Joined company", map[string]interface{}{
-		"company":  companyPayload(company, false),
+		"company":  companyPayload(r.Context(), h.pool, company, false),
 		"employee": payload,
 	})
 }
@@ -442,7 +443,7 @@ func (h *Handler) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, "Invitation accepted", map[string]interface{}{
-		"company":  companyPayload(company, false),
+		"company":  companyPayload(r.Context(), h.pool, company, false),
 		"employee": payload,
 	})
 }
@@ -470,7 +471,7 @@ func (h *Handler) ShowCompany(w http.ResponseWriter, r *http.Request) {
 	}
 
 	includeJoinCode := member.HasPermission("company.update")
-	data := companyPayload(company, includeJoinCode)
+	data := companyPayload(r.Context(), h.pool, company, includeJoinCode)
 	data["employee_id"] = member.EmployeeID
 	data["roles"] = member.Roles
 
@@ -536,15 +537,16 @@ func (h *Handler) UpdateCompany(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, "Company updated", companyPayload(company, true))
+	response.OK(w, "Company updated", companyPayload(r.Context(), h.pool, company, true))
 }
 
-func companyPayload(c companyRow, includeJoinCode bool) map[string]interface{} {
+func companyPayload(ctx context.Context, pool *pgxpool.Pool, c companyRow, includeJoinCode bool) map[string]interface{} {
 	payload := map[string]interface{}{
 		"id":       c.ID,
 		"name":     c.Name,
 		"slug":     c.Slug,
 		"currency": c.Currency,
+		"logo_url": mediaurl.LogoURL(ctx, pool, c.ID),
 	}
 	if includeJoinCode {
 		payload["code_to_join_company"] = c.CodeToJoinCompany
@@ -757,6 +759,8 @@ func employeePayload(ctx context.Context, pool *pgxpool.Pool, employeeID, compan
 			payload["invitation_url"] = nil
 		}
 	}
+
+	payload["avatar_url"] = mediaurl.AvatarURL(ctx, pool, id)
 
 	return payload, nil
 }

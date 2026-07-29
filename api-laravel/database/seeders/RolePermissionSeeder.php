@@ -32,6 +32,11 @@ class RolePermissionSeeder extends Seeder
             'teams.delete',
             'teams.manage_members',
             'hierarchy.assign',
+            'places.view',
+            'places.create',
+            'places.update',
+            'places.delete',
+            'countries.view',
         ];
 
         foreach ($permissions as $name) {
@@ -66,6 +71,11 @@ class RolePermissionSeeder extends Seeder
             'teams.delete',
             'teams.manage_members',
             'hierarchy.assign',
+            'places.view',
+            'places.create',
+            'places.update',
+            'places.delete',
+            'countries.view',
         ]);
 
         $employee->syncPermissions([
@@ -73,6 +83,8 @@ class RolePermissionSeeder extends Seeder
             'positions.view',
             'employee-statuses.view',
             'teams.view',
+            'places.view',
+            'countries.view',
         ]);
     }
 }

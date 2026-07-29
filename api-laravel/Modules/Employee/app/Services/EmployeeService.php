@@ -112,6 +112,7 @@ final class EmployeeService
             'teams',
             'managerLinks.manager',
             'managedReports',
+            'media',
         ]);
 
         $managers = $employee->managerLinks
@@ -153,6 +154,7 @@ final class EmployeeService
                 ->values()
                 ->all(),
             'is_manager' => $employee->hasRole('manager') || $employee->managedReports->isNotEmpty(),
+            'avatar_url' => $employee->getFirstMediaUrl('avatar') ?: null,
         ];
 
         if ($includeInvite) {

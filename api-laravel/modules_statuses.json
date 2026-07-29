@@ -3,5 +3,7 @@
     "Core": true,
     "Company": true,
     "Employee": true,
-    "Team": true
+    "Team": true,
+    "Uploads": true,
+    "Place": true
 }

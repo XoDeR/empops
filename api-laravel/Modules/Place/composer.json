@@ -1,0 +1,17 @@
+{
+    "name": "nwidart/place",
+    "description": "",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Place\\": "app/",
+            "Modules\\Place\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}

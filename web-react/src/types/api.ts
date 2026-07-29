@@ -28,6 +28,7 @@ export type CompanyMembership = {
   slug: string
   currency: string
   code_to_join_company?: string
+  logo_url?: string | null
   employee_id: string
   roles: string[]
 }
@@ -68,6 +69,7 @@ export type Employee = {
   last_name: string
   hired_at: string | null
   locked: boolean
+  avatar_url?: string | null
   position: { id: string; title: string } | null
   status: { id: string; name: string; type: EmployeeStatusType } | null
   roles: string[]
@@ -77,6 +79,24 @@ export type Employee = {
   is_manager?: boolean
   invitation_link?: string | null
   invitation_url?: string | null
+}
+
+export type Country = {
+  id: string
+  name: string
+  code: string
+}
+
+export type Place = {
+  id: string
+  street: string | null
+  city: string | null
+  province: string | null
+  postal_code: string | null
+  country: { id: string; name: string; code: string } | null
+  latitude: number | null
+  longitude: number | null
+  is_active: boolean
 }
 
 export type Team = {

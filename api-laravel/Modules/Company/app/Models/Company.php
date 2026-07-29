@@ -8,10 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Employee\Models\Employee;
 use Modules\Employee\Models\EmployeeStatus;
 use Modules\Employee\Models\Position;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Company extends Model
+class Company extends Model implements HasMedia
 {
     use HasUuids;
+    use InteractsWithMedia;
 
     protected $fillable = [
         'name',
@@ -33,5 +36,12 @@ class Company extends Model
     public function employeeStatuses(): HasMany
     {
         return $this->hasMany(EmployeeStatus::class);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logo')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
     }
 }

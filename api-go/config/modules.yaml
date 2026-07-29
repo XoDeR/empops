@@ -3,3 +3,5 @@ enabled:
   - company
   - employee
   - team
+  - place
+  - media

@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/XoDeR/empops/api-go/pkg/companyauth"
+	"github.com/XoDeR/empops/api-go/pkg/mediaurl"
 	"github.com/XoDeR/empops/api-go/pkg/response"
 	"github.com/XoDeR/empops/api-go/pkg/uuidv7"
 )
@@ -836,6 +837,7 @@ func employeePayload(ctx context.Context, pool *pgxpool.Pool, employeeID, compan
 		).Scan(&isManager)
 	}
 	payload["is_manager"] = isManager
+	payload["avatar_url"] = mediaurl.AvatarURL(ctx, pool, id)
 
 	return payload, nil
 }

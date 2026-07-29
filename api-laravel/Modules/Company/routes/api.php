@@ -22,6 +22,8 @@ Route::prefix('v1')->middleware(AuthenticateJwt::class)->group(function () {
             Route::get('/', [CompanyController::class, 'show']);
             Route::patch('/', [CompanyController::class, 'update'])
                 ->middleware(EnsurePermission::class.':company.update');
+            Route::put('logo', [\Modules\Company\Http\Controllers\CompanyLogoController::class, 'update'])
+                ->middleware(EnsurePermission::class.':company.update');
 
             Route::get('dashboard/me', [DashboardController::class, 'me']);
             Route::get('dashboard/team', [DashboardController::class, 'team']);

@@ -278,7 +278,7 @@ class ChunkedUploadController
 
         // Store via Spatie Media Library into a temp model.
         $temp = TemporaryUpload::create();
-        $media = $temp
+        $temp
             ->addMedia($finalPath)
             ->usingFileName($meta['filename'])
             ->toMediaCollection('uploads');
@@ -294,6 +294,7 @@ class ChunkedUploadController
             'size' => (int) $meta['total_size'],
             'status' => 'complete',
             'media_id' => $mediaItem?->id,
+            'temporary_upload_id' => $temp->id,
         ], 200);
     }
 
@@ -370,10 +371,12 @@ class ChunkedUploadController
                 continue;
             }
             $name = $this->sanitizeFilename($file->getClientOriginalName());
-            $temp->addMedia($file->getRealPath())->usingFileName($name)->toMediaCollection('uploads');
+            $media = $temp->addMedia($file->getRealPath())->usingFileName($name)->toMediaCollection('uploads');
             $uploaded[] = [
                 'filename' => $name,
                 'upload_id' => $uploadId,
+                'media_id' => $media->id,
+                'temporary_upload_id' => $temp->id,
             ];
         }
 
