@@ -18,6 +18,9 @@ type RouterConfig struct {
 	AuthUseCase    *usecase.AuthUseCase
 	JWTManager     *jwt.Manager
 	AllowedOrigins []string
+	// UploadRoutes mounts a dedicated (non-/api/v1) upload API under /api/upload.
+	// Intended to host the resumable chunked upload contract (upload-lib).
+	UploadRoutes func(r chi.Router)
 	// RegisterModules mounts every enabled module's routes under /api/v1
 	// once Core routes are in place (blank-imported in cmd/api).
 	RegisterModules func(r chi.Router)
@@ -37,13 +40,19 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Upload-ID", "X-Upload-Type", "X-Requested-With"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
 	authHandler := NewAuthHandler(cfg.AuthUseCase)
 	requireAuth := httpauth.RequireAuth(cfg.JWTManager)
+
+	if cfg.UploadRoutes != nil {
+		r.Route("/api/upload", func(up chi.Router) {
+			cfg.UploadRoutes(up)
+		})
+	}
 
 	r.Route("/api/v1", func(v1 chi.Router) {
 		v1.Get("/health", HealthHandler)

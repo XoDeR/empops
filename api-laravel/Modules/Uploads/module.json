@@ -1,0 +1,12 @@
+{
+    "name": "Uploads",
+    "alias": "uploads",
+    "description": "Own-server chunked media uploads (upload-lib compatible).",
+    "keywords": [],
+    "priority": 30,
+    "providers": [
+        "Modules\\Uploads\\Providers\\UploadsServiceProvider"
+    ],
+    "files": []
+}
+

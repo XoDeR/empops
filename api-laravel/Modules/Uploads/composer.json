@@ -1,0 +1,19 @@
+{
+    "name": "nwidart/uploads",
+    "description": "",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Uploads\\": "app/",
+            "Modules\\Uploads\\Database\\Factories\\": "database/factories/",
+            "Modules\\Uploads\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}
+

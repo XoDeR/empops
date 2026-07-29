@@ -9,10 +9,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/file-uploads-go/backend/pkg/upload"
+	"github.com/file-uploads-go/backend/pkg/upload/storage"
 
 	httpadapter "github.com/XoDeR/empops/api-go/internal/adapter/http"
 	"github.com/XoDeR/empops/api-go/internal/adapter/persistence"
@@ -88,6 +91,46 @@ func run() error {
 		DB:     pool,
 	}
 
+	uploadDir := envOrDefault("EMPOPS_UPLOAD_DIR", "./uploads")
+	uploadMaxSizeBytes := int64(100 * 1024 * 1024) // 100MB
+	if raw := os.Getenv("EMPOPS_UPLOAD_MAX_SIZE_BYTES"); raw != "" {
+		if v, err := strconv.ParseInt(raw, 10, 64); err == nil && v > 0 {
+			uploadMaxSizeBytes = v
+		}
+	}
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		return fmt.Errorf("upload: create upload dir: %w", err)
+	}
+
+	uploadStore := storage.NewLocal(uploadDir)
+	uploadSvc, err := upload.NewService(upload.Options{
+		Config: upload.Config{
+			UploadDir: uploadDir,
+			MaxSize:   uploadMaxSizeBytes,
+		},
+		Storage: uploadStore,
+	})
+	if err != nil {
+		return fmt.Errorf("upload: create upload service: %w", err)
+	}
+
+	uploadRoutes := func(up chi.Router) {
+		up.Use(uploadSvc.RateLimiter().Middleware)
+
+		// Stream multipart endpoint (multi-file) - parity with file-uploads-go.
+		up.Post("/stream", uploadSvc.HandleStream)
+
+		// Chunked resumable endpoint (single-file upload session per upload_id).
+		cm := uploadSvc.ChunkedManager()
+		up.Post("/init", cm.InitiateUpload)
+		up.Post("/chunk", cm.UploadChunk)
+		up.Post("/complete", cm.CompleteUpload)
+		up.Get("/status", cm.GetUploadStatus)
+
+		// Optional: SSE progress (primarily used by stream uploader).
+		up.Get("/progress", uploadSvc.ProgressTracker().SSEHandler)
+	}
+
 	initialized, err := module.DefaultRegistry.InitializeAll(ctx, core, modulesCfg.Enabled)
 	if err != nil {
 		return fmt.Errorf("initialize modules: %w", err)
@@ -102,6 +145,7 @@ func run() error {
 		AuthUseCase:    authUseCase,
 		JWTManager:     jwtManager,
 		AllowedOrigins: cfg.CORS.AllowedOrigins,
+		UploadRoutes:   uploadRoutes,
 		RegisterModules: func(r chi.Router) {
 			module.RegisterRoutes(r, initialized)
 		},
