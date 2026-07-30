@@ -1,0 +1,11 @@
+{
+    "name": "Finance",
+    "alias": "finance",
+    "description": "Expense reporting and approvals",
+    "keywords": [],
+    "priority": 45,
+    "providers": [
+        "Modules\\Finance\\Providers\\FinanceServiceProvider"
+    ],
+    "files": []
+}

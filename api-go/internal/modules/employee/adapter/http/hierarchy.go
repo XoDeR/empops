@@ -157,6 +157,15 @@ func (h *Handler) UnassignManager(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = syncManagerRole(r.Context(), h.pool, managerID)
+	_, _ = h.pool.Exec(r.Context(), `
+		UPDATE expenses SET status = 'accounting_approval', updated_at = now()
+		WHERE company_id = $1 AND employee_id = $2 AND status = 'manager_approval'
+		  AND NOT EXISTS (
+			SELECT 1 FROM direct_reports
+			WHERE company_id = $1 AND employee_id = $2
+		  )`,
+		companyID, employeeID,
+	)
 	_ = audit.LogEmployee(r.Context(), h.pool, companyID, "hierarchy.manager_unassigned", member.EmployeeID, strPtr("employee"), &employeeID, map[string]interface{}{
 		"manager_id":  managerID,
 		"employee_id": employeeID,

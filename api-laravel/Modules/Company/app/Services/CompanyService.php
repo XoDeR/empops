@@ -7,10 +7,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Company\Models\Company;
 use Modules\Employee\Models\Employee;
+use Modules\Finance\Services\FinanceService;
 use RuntimeException;
 
 final class CompanyService
 {
+    public function __construct(private readonly FinanceService $finance) {}
+
     /**
      * @return array{company: Company, employee: Employee}
      */
@@ -23,6 +26,7 @@ final class CompanyService
                 'currency' => strtoupper($currency),
                 'code_to_join_company' => $this->uniqueJoinCode(),
             ]);
+            $this->finance->seedDefaultCategories($company);
 
             $parts = $this->splitName($user->name);
 
@@ -116,6 +120,7 @@ final class CompanyService
             'name' => $company->name,
             'slug' => $company->slug,
             'currency' => $company->currency,
+            'work_from_home_enabled' => (bool) $company->work_from_home_enabled,
             'logo_url' => $company->getFirstMediaUrl('logo') ?: null,
         ];
 

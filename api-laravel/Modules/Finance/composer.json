@@ -1,0 +1,17 @@
+{
+    "name": "nwidart/finance",
+    "description": "",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Finance\\": "app/",
+            "Modules\\Finance\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}

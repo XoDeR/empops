@@ -11,8 +11,10 @@ use Modules\Company\Services\QuestionService;
 use Modules\Employee\Models\DirectReport;
 use Modules\Employee\Models\Employee;
 use Modules\Employee\Services\WorklogService;
+use Modules\Finance\Services\FinanceService;
 use Modules\Notification\Services\NotificationService;
 use Modules\Team\Models\Team;
+use Modules\Time\Services\TimeService;
 
 class DashboardController extends Controller
 {
@@ -20,6 +22,8 @@ class DashboardController extends Controller
         private readonly WorklogService $worklogs,
         private readonly QuestionService $questions,
         private readonly NotificationService $notifications,
+        private readonly TimeService $time,
+        private readonly FinanceService $finance,
     ) {}
 
     public function me(Request $request): JsonResponse
@@ -68,6 +72,14 @@ class DashboardController extends Controller
         return $this->shell($request, 'hr', true, false);
     }
 
+    public function accountant(Request $request): JsonResponse
+    {
+        /** @var Employee $actor */
+        $actor = $request->attributes->get('employee');
+
+        return $this->shell($request, 'accountant', $actor->hasRole('accountant'), false);
+    }
+
     private function shell(Request $request, string $view, bool $allowed, bool $withWidgets): JsonResponse
     {
         if (! $allowed) {
@@ -113,6 +125,44 @@ class DashboardController extends Controller
                         'count' => $this->notifications->unreadCount($company, $actor),
                     ],
                 ],
+                [
+                    'type' => 'timesheet_current_week',
+                    'data' => $this->time->currentWeekPayload($company, $actor),
+                ],
+            ];
+
+            if ($company->work_from_home_enabled) {
+                $widgets[] = [
+                    'type' => 'wfh_today',
+                    'data' => [
+                        'work_from_home' => $this->time->isWorkFromHomeToday($actor),
+                    ],
+                ];
+            }
+        } elseif ($view === 'manager') {
+            $widgets = [
+                [
+                    'type' => 'pending_timesheets',
+                    'data' => ['count' => $this->time->pending($company, $actor)->count()],
+                ],
+                [
+                    'type' => 'pending_expenses',
+                    'data' => ['count' => $this->finance->pendingManager($company, $actor)->count()],
+                ],
+            ];
+        } elseif ($view === 'hr') {
+            $widgets = [
+                [
+                    'type' => 'pending_timesheets',
+                    'data' => ['count' => $this->time->pending($company, $actor)->count()],
+                ],
+            ];
+        } elseif ($view === 'accountant') {
+            $widgets = [
+                [
+                    'type' => 'pending_accounting_expenses',
+                    'data' => ['count' => $this->finance->pendingAccounting($company)->count()],
+                ],
             ];
         }
 
@@ -123,6 +173,7 @@ class DashboardController extends Controller
                 'is_manager' => $isManager,
                 'can_manage_hr' => $actor->hasAnyRole(['administrator', 'hr']),
                 'is_admin' => $actor->hasRole('administrator'),
+                'is_accountant' => $actor->hasRole('accountant'),
             ],
         ]);
     }

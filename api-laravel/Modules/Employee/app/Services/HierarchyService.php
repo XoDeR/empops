@@ -7,6 +7,7 @@ use Modules\Company\Models\Company;
 use Modules\Company\Services\AuditLogger;
 use Modules\Employee\Models\DirectReport;
 use Modules\Employee\Models\Employee;
+use Modules\Finance\Models\Expense;
 use RuntimeException;
 
 final class HierarchyService
@@ -66,6 +67,18 @@ final class HierarchyService
         DB::transaction(function () use ($company, $employee, $manager, $actor, $edge) {
             $edge->delete();
             $this->syncManagerRole($manager);
+
+            $hasOtherManagers = DirectReport::query()
+                ->where('company_id', $company->id)
+                ->where('employee_id', $employee->id)
+                ->exists();
+            if (! $hasOtherManagers) {
+                Expense::query()
+                    ->where('company_id', $company->id)
+                    ->where('employee_id', $employee->id)
+                    ->where('status', 'manager_approval')
+                    ->update(['status' => 'accounting_approval']);
+            }
 
             $this->audit->log($company, $actor, 'hierarchy.manager_unassigned', $employee, [
                 'manager_id' => (string) $manager->id,

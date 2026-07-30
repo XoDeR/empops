@@ -1,0 +1,17 @@
+{
+    "name": "nwidart/time",
+    "description": "",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Time\\": "app/",
+            "Modules\\Time\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}

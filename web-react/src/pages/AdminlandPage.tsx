@@ -8,6 +8,11 @@ import { authFetch } from '@/lib/authFetch'
 import { useCompanyContext } from '@/routes/CompanyLayout'
 import { ImageUploadField } from '@/components/ImageUploadField'
 import { CompanyNewsSection, QuestionsSection } from '@/components/CommunicateAdminSections'
+import {
+  AccountantsSection,
+  ExpenseCategoriesSection,
+  WorkFromHomeAdminSection,
+} from '@/components/OperateAdminSections'
 import type { EmployeeStatus, EmployeeStatusType, Position } from '@/types/api'
 
 const settingsSchema = z.object({
@@ -484,6 +489,9 @@ export default function AdminlandPage() {
       {isAdmin && <CompanySettingsSection companyId={companyId} />}
       <CompanyNewsSection companyId={companyId} />
       <QuestionsSection companyId={companyId} />
+      <ExpenseCategoriesSection companyId={companyId} />
+      <WorkFromHomeAdminSection companyId={companyId} />
+      <AccountantsSection companyId={companyId} />
       <PositionsSection companyId={companyId} />
       <EmployeeStatusesSection companyId={companyId} />
     </div>

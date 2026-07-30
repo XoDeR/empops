@@ -42,6 +42,7 @@ type companyRow struct {
 	Name              string
 	Slug              string
 	Currency          string
+	WorkFromHomeEnabled bool
 	CodeToJoinCompany string
 }
 
@@ -88,7 +89,7 @@ func (h *Handler) ListCompanies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := h.pool.Query(r.Context(), `
-		SELECT c.id, c.name, c.slug, c.currency, c.code_to_join_company, e.id
+		SELECT c.id, c.name, c.slug, c.currency, c.work_from_home_enabled, c.code_to_join_company, e.id
 		FROM employees e
 		JOIN companies c ON c.id = e.company_id
 		WHERE e.user_id = $1 AND e.locked = false
@@ -103,7 +104,7 @@ func (h *Handler) ListCompanies(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var c companyRow
 		var employeeID string
-		if err := rows.Scan(&c.ID, &c.Name, &c.Slug, &c.Currency, &c.CodeToJoinCompany, &employeeID); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.Slug, &c.Currency, &c.WorkFromHomeEnabled, &c.CodeToJoinCompany, &employeeID); err != nil {
 			response.Fail(w, http.StatusInternalServerError, "scan failed", err.Error())
 			return
 		}
@@ -191,9 +192,9 @@ func (h *Handler) CreateCompany(w http.ResponseWriter, r *http.Request) {
 	err = tx.QueryRow(r.Context(), `
 		INSERT INTO companies (id, name, slug, currency, code_to_join_company, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, now(), now())
-		RETURNING id, name, slug, currency, code_to_join_company`,
+		RETURNING id, name, slug, currency, work_from_home_enabled, code_to_join_company`,
 		companyID, req.Name, slug, currency, joinCode,
-	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.CodeToJoinCompany)
+	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.WorkFromHomeEnabled, &company.CodeToJoinCompany)
 	if err != nil {
 		response.Fail(w, http.StatusInternalServerError, "create company failed", err.Error())
 		return
@@ -222,6 +223,19 @@ func (h *Handler) CreateCompany(w http.ResponseWriter, r *http.Request) {
 	if err := assignRole(r.Context(), tx, employee.ID, "administrator"); err != nil {
 		response.Fail(w, http.StatusInternalServerError, "assign role failed", err.Error())
 		return
+	}
+
+	for _, name := range []string{
+		"Maintenance and repairs", "Meals and entertainment", "Office expense", "Travel", "Motor vehicle expenses",
+	} {
+		if _, err := tx.Exec(r.Context(), `
+			INSERT INTO expense_categories (id, company_id, name)
+			VALUES ($1, $2, $3) ON CONFLICT (company_id, name) DO NOTHING`,
+			uuidv7.New(), company.ID, name,
+		); err != nil {
+			response.Fail(w, http.StatusInternalServerError, "seed expense categories failed", err.Error())
+			return
+		}
 	}
 
 	if err := tx.Commit(r.Context()); err != nil {
@@ -262,9 +276,9 @@ func (h *Handler) JoinCompany(w http.ResponseWriter, r *http.Request) {
 
 	var company companyRow
 	err := h.pool.QueryRow(r.Context(), `
-		SELECT id, name, slug, currency, code_to_join_company
+		SELECT id, name, slug, currency, work_from_home_enabled, code_to_join_company
 		FROM companies WHERE code_to_join_company = $1`, req.Code,
-	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.CodeToJoinCompany)
+	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.WorkFromHomeEnabled, &company.CodeToJoinCompany)
 	if err == pgx.ErrNoRows {
 		response.Fail(w, http.StatusNotFound, "Invalid join code", nil)
 		return
@@ -428,9 +442,9 @@ func (h *Handler) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 
 	var company companyRow
 	err = h.pool.QueryRow(r.Context(), `
-		SELECT id, name, slug, currency, code_to_join_company FROM companies WHERE id = $1`,
+		SELECT id, name, slug, currency, work_from_home_enabled, code_to_join_company FROM companies WHERE id = $1`,
 		employee.CompanyID,
-	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.CodeToJoinCompany)
+	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.WorkFromHomeEnabled, &company.CodeToJoinCompany)
 	if err != nil {
 		response.Fail(w, http.StatusInternalServerError, "company lookup failed", err.Error())
 		return
@@ -459,8 +473,8 @@ func (h *Handler) ShowCompany(w http.ResponseWriter, r *http.Request) {
 	companyID := chi.URLParam(r, "companyId")
 	var company companyRow
 	err := h.pool.QueryRow(r.Context(), `
-		SELECT id, name, slug, currency, code_to_join_company FROM companies WHERE id = $1`, companyID,
-	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.CodeToJoinCompany)
+		SELECT id, name, slug, currency, work_from_home_enabled, code_to_join_company FROM companies WHERE id = $1`, companyID,
+	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.WorkFromHomeEnabled, &company.CodeToJoinCompany)
 	if err == pgx.ErrNoRows {
 		response.Fail(w, http.StatusNotFound, "Company not found", nil)
 		return
@@ -490,8 +504,8 @@ func (h *Handler) UpdateCompany(w http.ResponseWriter, r *http.Request) {
 
 	var company companyRow
 	err := h.pool.QueryRow(r.Context(), `
-		SELECT id, name, slug, currency, code_to_join_company FROM companies WHERE id = $1`, companyID,
-	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.CodeToJoinCompany)
+		SELECT id, name, slug, currency, work_from_home_enabled, code_to_join_company FROM companies WHERE id = $1`, companyID,
+	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.WorkFromHomeEnabled, &company.CodeToJoinCompany)
 	if err == pgx.ErrNoRows {
 		response.Fail(w, http.StatusNotFound, "Company not found", nil)
 		return
@@ -529,9 +543,9 @@ func (h *Handler) UpdateCompany(w http.ResponseWriter, r *http.Request) {
 	err = h.pool.QueryRow(r.Context(), `
 		UPDATE companies SET name = $2, slug = $3, currency = $4, updated_at = now()
 		WHERE id = $1
-		RETURNING id, name, slug, currency, code_to_join_company`,
+		RETURNING id, name, slug, currency, work_from_home_enabled, code_to_join_company`,
 		company.ID, name, slug, currency,
-	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.CodeToJoinCompany)
+	).Scan(&company.ID, &company.Name, &company.Slug, &company.Currency, &company.WorkFromHomeEnabled, &company.CodeToJoinCompany)
 	if err != nil {
 		response.Fail(w, http.StatusInternalServerError, "update company failed", err.Error())
 		return
@@ -546,6 +560,7 @@ func companyPayload(ctx context.Context, pool *pgxpool.Pool, c companyRow, inclu
 		"name":     c.Name,
 		"slug":     c.Slug,
 		"currency": c.Currency,
+		"work_from_home_enabled": c.WorkFromHomeEnabled,
 		"logo_url": mediaurl.LogoURL(ctx, pool, c.ID),
 	}
 	if includeJoinCode {

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Auth\Http\Middleware\AuthenticateJwt;
 use Modules\Company\Http\Controllers\AuditLogController;
 use Modules\Company\Http\Controllers\CompanyController;
+use Modules\Company\Http\Controllers\CompanyLogoController;
 use Modules\Company\Http\Controllers\CompanyNewsController;
 use Modules\Company\Http\Controllers\DashboardController;
 use Modules\Company\Http\Controllers\InvitationController;
@@ -24,13 +25,14 @@ Route::prefix('v1')->middleware(AuthenticateJwt::class)->group(function () {
             Route::get('/', [CompanyController::class, 'show']);
             Route::patch('/', [CompanyController::class, 'update'])
                 ->middleware(EnsurePermission::class.':company.update');
-            Route::put('logo', [\Modules\Company\Http\Controllers\CompanyLogoController::class, 'update'])
+            Route::put('logo', [CompanyLogoController::class, 'update'])
                 ->middleware(EnsurePermission::class.':company.update');
 
             Route::get('dashboard/me', [DashboardController::class, 'me']);
             Route::get('dashboard/team', [DashboardController::class, 'team']);
             Route::get('dashboard/manager', [DashboardController::class, 'manager']);
             Route::get('dashboard/hr', [DashboardController::class, 'hr']);
+            Route::get('dashboard/accountant', [DashboardController::class, 'accountant']);
 
             Route::get('news', [CompanyNewsController::class, 'index']);
             Route::get('news/{newsId}', [CompanyNewsController::class, 'show']);

@@ -65,6 +65,7 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 			sub.Get("/dashboard/team", m.handler.DashboardTeam)
 			sub.Get("/dashboard/manager", m.handler.DashboardManager)
 			sub.Get("/dashboard/hr", m.handler.DashboardHR)
+			sub.Get("/dashboard/accountant", m.handler.DashboardAccountant)
 
 			sub.With(companyauth.RequirePermission("adminland.access")).Get("/audit-logs", m.handler.ListAuditLogs)
 

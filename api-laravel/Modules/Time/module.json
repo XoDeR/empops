@@ -1,0 +1,11 @@
+{
+    "name": "Time",
+    "alias": "time",
+    "description": "Timesheets and work-from-home tracking",
+    "keywords": [],
+    "priority": 40,
+    "providers": [
+        "Modules\\Time\\Providers\\TimeServiceProvider"
+    ],
+    "files": []
+}

@@ -55,6 +55,12 @@ class RolePermissionSeeder extends Seeder
             'questions.update',
             'questions.delete',
             'questions.manage',
+            'timesheets.view',
+            'timesheets.approve',
+            'expenses.view',
+            'expenses.delete',
+            'expenses.manage_categories',
+            'expenses.finalize',
         ];
 
         foreach ($permissions as $name) {
@@ -64,7 +70,8 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::findOrCreate('administrator', 'web');
         $hr = Role::findOrCreate('hr', 'web');
         $employee = Role::findOrCreate('employee', 'web');
-        Role::findOrCreate('manager', 'web');
+        $accountant = Role::findOrCreate('accountant', 'web');
+        $manager = Role::findOrCreate('manager', 'web');
 
         $admin->syncPermissions($permissions);
 
@@ -112,6 +119,21 @@ class RolePermissionSeeder extends Seeder
             'questions.update',
             'questions.delete',
             'questions.manage',
+            'timesheets.view',
+            'timesheets.approve',
+            'expenses.view',
+            'expenses.delete',
+            'expenses.manage_categories',
+            'expenses.finalize',
+        ]);
+
+        $accountant->syncPermissions([
+            'expenses.view',
+            'expenses.finalize',
+        ]);
+
+        $manager->syncPermissions([
+            'timesheets.approve',
         ]);
 
         $employee->syncPermissions([
@@ -128,6 +150,8 @@ class RolePermissionSeeder extends Seeder
             'ships.view',
             'ships.create',
             'questions.view',
+            'timesheets.view',
+            'expenses.view',
         ]);
     }
 }

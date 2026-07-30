@@ -6,5 +6,7 @@
     "Team": true,
     "Uploads": true,
     "Place": true,
-    "Notification": true
+    "Notification": true,
+    "Time": true,
+    "Finance": true
 }

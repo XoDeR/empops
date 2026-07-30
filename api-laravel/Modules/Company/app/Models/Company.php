@@ -21,7 +21,15 @@ class Company extends Model implements HasMedia
         'slug',
         'currency',
         'code_to_join_company',
+        'work_from_home_enabled',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'work_from_home_enabled' => 'boolean',
+        ];
+    }
 
     public function employees(): HasMany
     {

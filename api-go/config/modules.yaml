@@ -6,3 +6,5 @@ enabled:
   - place
   - media
   - notification
+  - time
+  - finance

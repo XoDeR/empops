@@ -11,6 +11,7 @@ export type CompanyContextValue = {
   isAdmin: boolean
   isHrOrAdmin: boolean
   isManager: boolean
+  isAccountant: boolean
 }
 
 function tabClass({ isActive }: { isActive: boolean }) {
@@ -56,8 +57,15 @@ export default function CompanyLayout() {
   const isAdmin = roles.includes('administrator')
   const isHrOrAdmin = isAdmin || roles.includes('hr')
   const isManager = roles.includes('manager') || isHrOrAdmin
+  const isAccountant = roles.includes('accountant') || isHrOrAdmin
 
-  const context: CompanyContextValue = { company, isAdmin, isHrOrAdmin, isManager }
+  const context: CompanyContextValue = {
+    company,
+    isAdmin,
+    isHrOrAdmin,
+    isManager,
+    isAccountant,
+  }
 
   return (
     <div className="space-y-6">

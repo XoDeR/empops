@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: EmpOps API
   version: 1.0.0
-  description: Step 2 — Teams, hierarchy, and org structure (Laravel and Go parity).
+  description: EmpOps API (Laravel and Go parity). Step 5 adds timesheets, WFH, expenses, and FX.
 servers:
   - url: http://localhost:8000/api/v1
     description: Laravel
@@ -782,6 +782,477 @@ paths:
                       data:
                         $ref: "#/components/schemas/DashboardShell"
 
+  /companies/{companyId}/dashboard/accountant:
+    get:
+      summary: Accountant dashboard shell
+      operationId: dashboardAccountant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Dashboard shell with pending accounting expenses
+        "403":
+          description: Not an accountant
+
+  /companies/{companyId}/timesheets:
+    get:
+      summary: Create-or-get timesheet for a week (query date)
+      operationId: getOrCreateTimesheet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Any date in the target Mon–Sun week (defaults to today)
+        - name: employeeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Target employee (defaults to self; requires timesheets.view if not self)
+      responses:
+        "200":
+          description: Timesheet with entries
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Timesheet"
+    post:
+      summary: Create-or-get timesheet for a week
+      operationId: createOrGetTimesheet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                employee_id:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Timesheet with entries
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Timesheet"
+
+  /companies/{companyId}/timesheets/pending:
+    get:
+      summary: Pending timesheets for manager or HR approval
+      operationId: listPendingTimesheets
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: List of ready_to_submit timesheets
+
+  /companies/{companyId}/timesheets/{timesheetId}:
+    get:
+      summary: Get timesheet
+      operationId: getTimesheet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TimesheetId"
+      responses:
+        "200":
+          description: Timesheet with entries
+
+  /companies/{companyId}/timesheets/{timesheetId}/entries:
+    post:
+      summary: Upsert a time tracking entry (ad-hoc)
+      operationId: upsertTimesheetEntry
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TimesheetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimesheetEntryInput"
+      responses:
+        "200":
+          description: Updated timesheet
+        "422":
+          description: Validation or duration cap exceeded
+
+  /companies/{companyId}/timesheets/{timesheetId}/entries/{entryId}:
+    delete:
+      summary: Delete a time tracking entry
+      operationId: deleteTimesheetEntry
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TimesheetId"
+        - $ref: "#/components/parameters/EntryId"
+      responses:
+        "200":
+          description: Updated timesheet
+
+  /companies/{companyId}/timesheets/{timesheetId}/submit:
+    post:
+      summary: Submit timesheet for approval
+      operationId: submitTimesheet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TimesheetId"
+      responses:
+        "200":
+          description: Timesheet now ready_to_submit
+
+  /companies/{companyId}/timesheets/{timesheetId}/approve:
+    post:
+      summary: Approve timesheet
+      operationId: approveTimesheet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TimesheetId"
+      responses:
+        "200":
+          description: Timesheet approved
+
+  /companies/{companyId}/timesheets/{timesheetId}/reject:
+    post:
+      summary: Reject timesheet
+      operationId: rejectTimesheet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TimesheetId"
+      responses:
+        "200":
+          description: Timesheet rejected
+
+  /companies/{companyId}/employees/{employeeId}/work-from-home:
+    put:
+      summary: Set work-from-home for a date (presence/absence)
+      operationId: setWorkFromHome
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, work_from_home]
+              properties:
+                date:
+                  type: string
+                  format: date
+                work_from_home:
+                  type: boolean
+      responses:
+        "200":
+          description: WFH state for that date
+
+  /companies/{companyId}/work-from-home:
+    get:
+      summary: Company WFH setting
+      operationId: getWorkFromHomeSetting
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: "{ enabled: boolean }"
+    patch:
+      summary: Toggle company WFH feature
+      operationId: patchWorkFromHomeSetting
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        "200":
+          description: Updated setting
+
+  /companies/{companyId}/expense-categories:
+    get:
+      summary: List expense categories
+      operationId: listExpenseCategories
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Categories
+    post:
+      summary: Create expense category
+      operationId: createExpenseCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseCategoryInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/expense-categories/{categoryId}:
+    patch:
+      summary: Update expense category
+      operationId: updateExpenseCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/CategoryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseCategoryInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete expense category
+      operationId: deleteExpenseCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/CategoryId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/expenses:
+    get:
+      summary: List expenses (scoped by role)
+      operationId: listExpenses
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: employeeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Expense list
+    post:
+      summary: Submit an expense
+      operationId: createExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "201":
+          description: Created (manager_approval or accounting_approval)
+
+  /companies/{companyId}/expenses/pending/manager:
+    get:
+      summary: Expenses awaiting manager approval
+      operationId: listPendingManagerExpenses
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Pending expenses for direct reports
+
+  /companies/{companyId}/expenses/pending/accounting:
+    get:
+      summary: Expenses awaiting accounting approval
+      operationId: listPendingAccountingExpenses
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Accounting queue
+
+  /companies/{companyId}/expenses/{expenseId}:
+    get:
+      summary: Get expense
+      operationId: getExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ExpenseId"
+      responses:
+        "200":
+          description: Expense
+    delete:
+      summary: Delete expense (pre-accept)
+      operationId: deleteExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ExpenseId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/expenses/{expenseId}/manager-approve:
+    post:
+      summary: Manager approve expense
+      operationId: managerApproveExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ExpenseId"
+      responses:
+        "200":
+          description: Moved to accounting_approval
+
+  /companies/{companyId}/expenses/{expenseId}/manager-reject:
+    post:
+      summary: Manager reject expense
+      operationId: managerRejectExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ExpenseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Rejected by manager
+
+  /companies/{companyId}/expenses/{expenseId}/accounting-approve:
+    post:
+      summary: Accountant accept expense
+      operationId: accountingApproveExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ExpenseId"
+      responses:
+        "200":
+          description: Accepted
+
+  /companies/{companyId}/expenses/{expenseId}/accounting-reject:
+    post:
+      summary: Accountant reject expense
+      operationId: accountingRejectExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ExpenseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Rejected by accounting
+
+  /companies/{companyId}/employees/{employeeId}/accountant:
+    post:
+      summary: Grant accountant role
+      operationId: grantAccountant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Accountant granted
+    delete:
+      summary: Revoke accountant role
+      operationId: revokeAccountant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Accountant revoked
+
   /companies/{companyId}/dashboard/team:
     get:
       summary: Team dashboard shell
@@ -910,6 +1381,34 @@ components:
       schema:
         type: string
         format: uuid
+    TimesheetId:
+      name: timesheetId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EntryId:
+      name: entryId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ExpenseId:
+      name: expenseId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CategoryId:
+      name: categoryId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
 
   schemas:
     ApiEnvelope:
@@ -1022,7 +1521,7 @@ components:
               type: array
               items:
                 type: string
-                enum: [administrator, hr, employee, manager]
+                enum: [administrator, hr, employee, manager, accountant]
 
     CreateCompanyRequest:
       type: object
@@ -1119,7 +1618,7 @@ components:
           type: array
           items:
             type: string
-            enum: [administrator, hr, employee, manager]
+            enum: [administrator, hr, employee, manager, accountant]
         manager:
           $ref: "#/components/schemas/EmployeeSummary"
           nullable: true
@@ -1332,7 +1831,7 @@ components:
       properties:
         view:
           type: string
-          enum: [me, team, manager, hr]
+          enum: [me, team, manager, hr, accountant]
         widgets:
           type: array
           items:
@@ -1345,6 +1844,8 @@ components:
             can_manage_hr:
               type: boolean
             is_admin:
+              type: boolean
+            is_accountant:
               type: boolean
 
     AuditLog:
@@ -1392,3 +1893,238 @@ components:
           type: integer
         total:
           type: integer
+
+    Timesheet:
+      type: object
+      required: [id, company_id, employee_id, started_at, ended_at, status, entries]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        employee_id:
+          type: string
+          format: uuid
+        employee:
+          $ref: "#/components/schemas/EmployeeSummary"
+        started_at:
+          type: string
+          format: date
+        ended_at:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [open, ready_to_submit, approved, rejected]
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        approver_id:
+          type: string
+          format: uuid
+          nullable: true
+        approver_name:
+          type: string
+          nullable: true
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimesheetEntry"
+        total_duration:
+          type: integer
+          description: Sum of entry durations in minutes
+
+    TimesheetEntry:
+      type: object
+      required: [id, timesheet_id, employee_id, duration, happened_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        timesheet_id:
+          type: string
+          format: uuid
+        employee_id:
+          type: string
+          format: uuid
+        duration:
+          type: integer
+          description: Minutes
+        happened_at:
+          type: string
+          format: date
+        description:
+          type: string
+          nullable: true
+
+    TimesheetEntryInput:
+      type: object
+      required: [happened_at, duration]
+      properties:
+        happened_at:
+          type: string
+          format: date
+        duration:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        description:
+          type: string
+          nullable: true
+
+    ExpenseCategory:
+      type: object
+      required: [id, company_id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    ExpenseCategoryInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+
+    Expense:
+      type: object
+      required: [id, company_id, title, amount, currency, status, expensed_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        employee_id:
+          type: string
+          format: uuid
+          nullable: true
+        employee_name:
+          type: string
+          nullable: true
+        expense_category_id:
+          type: string
+          format: uuid
+          nullable: true
+        category:
+          $ref: "#/components/schemas/ExpenseCategory"
+          nullable: true
+        status:
+          type: string
+          enum:
+            - created
+            - manager_approval
+            - accounting_approval
+            - rejected_by_manager
+            - rejected_by_accounting
+            - accepted
+        title:
+          type: string
+        amount:
+          type: integer
+          description: Minor units (cents)
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        converted_amount:
+          type: integer
+          nullable: true
+        converted_to_currency:
+          type: string
+          nullable: true
+        converted_at:
+          type: string
+          format: date-time
+          nullable: true
+        exchange_rate:
+          type: number
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        expensed_at:
+          type: string
+          format: date
+        manager_approver_id:
+          type: string
+          format: uuid
+          nullable: true
+        manager_approver_name:
+          type: string
+          nullable: true
+        manager_approver_approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        manager_rejection_explanation:
+          type: string
+          nullable: true
+        accounting_approver_id:
+          type: string
+          format: uuid
+          nullable: true
+        accounting_approver_name:
+          type: string
+          nullable: true
+        accounting_approver_approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        accounting_rejection_explanation:
+          type: string
+          nullable: true
+
+    ExpenseInput:
+      type: object
+      required: [title, amount, currency, expensed_at]
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        amount:
+          type: integer
+          minimum: 1
+          description: Minor units (cents)
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        expensed_at:
+          type: string
+          format: date
+        expense_category_id:
+          type: string
+          format: uuid
+          nullable: true
+        description:
+          type: string
+          nullable: true
+
+    WorkFromHomeState:
+      type: object
+      required: [date, work_from_home]
+      properties:
+        date:
+          type: string
+          format: date
+        work_from_home:
+          type: boolean
+
+    WorkFromHomeSetting:
+      type: object
+      required: [enabled]
+      properties:
+        enabled:
+          type: boolean
