@@ -1,0 +1,16 @@
+DROP TABLE IF EXISTS discipline_events;
+DROP TABLE IF EXISTS discipline_cases;
+DROP TABLE IF EXISTS e_coffee_matches;
+DROP TABLE IF EXISTS e_coffees;
+DROP TABLE IF EXISTS employee_skill;
+DROP TABLE IF EXISTS skills;
+DROP TABLE IF EXISTS rate_your_manager_answers;
+DROP TABLE IF EXISTS rate_your_manager_surveys;
+DROP TABLE IF EXISTS one_on_one_notes;
+DROP TABLE IF EXISTS one_on_one_action_items;
+DROP TABLE IF EXISTS one_on_one_talking_points;
+DROP TABLE IF EXISTS one_on_one_entries;
+DROP TABLE IF EXISTS morale_team_histories;
+DROP TABLE IF EXISTS morale_company_histories;
+DROP TABLE IF EXISTS morales;
+ALTER TABLE companies DROP COLUMN IF EXISTS e_coffee_enabled;

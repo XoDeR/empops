@@ -9,3 +9,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('empops:mark-missed-worklogs')->dailyAt('23:00');
+Schedule::command('empops:log-company-morale')->dailyAt('23:00');
+Schedule::command('empops:log-team-morale')->dailyAt('23:00');
+Schedule::command('empops:rate-manager-start')->dailyAt('01:00')->when(fn () => now()->isLastOfMonth());
+Schedule::command('empops:rate-manager-stop')->hourly();
+Schedule::command('empops:e-coffee-start')->weeklyOn(1, '09:00');

@@ -75,15 +75,25 @@ func (h *Handler) dashboardShell(w http.ResponseWriter, r *http.Request, view st
 		var timesheets, expenses int
 		_ = h.pool.QueryRow(r.Context(), `SELECT COUNT(*) FROM timesheets t WHERE t.company_id=$1 AND t.status='ready_to_submit' AND EXISTS(SELECT 1 FROM direct_reports d WHERE d.company_id=$1 AND d.manager_id=$2 AND d.employee_id=t.employee_id)`, member.CompanyID, member.EmployeeID).Scan(&timesheets)
 		_ = h.pool.QueryRow(r.Context(), `SELECT COUNT(*) FROM expenses e WHERE e.company_id=$1 AND e.status='manager_approval' AND EXISTS(SELECT 1 FROM direct_reports d WHERE d.company_id=$1 AND d.manager_id=$2 AND d.employee_id=e.employee_id)`, member.CompanyID, member.EmployeeID).Scan(&expenses)
+		var oneOnOnes, discipline int
+		_ = h.pool.QueryRow(r.Context(), `SELECT COUNT(*) FROM one_on_one_entries WHERE company_id=$1 AND manager_id=$2 AND happened=false`, member.CompanyID, member.EmployeeID).Scan(&oneOnOnes)
+		_ = h.pool.QueryRow(r.Context(), `SELECT COUNT(*) FROM discipline_cases WHERE company_id=$1 AND active=true AND employee_id IN (SELECT employee_id FROM direct_reports WHERE company_id=$1 AND manager_id=$2)`, member.CompanyID, member.EmployeeID).Scan(&discipline)
 		widgets = []interface{}{
 			map[string]interface{}{"type": "pending_timesheets", "data": map[string]int{"count": timesheets}},
 			map[string]interface{}{"type": "pending_expenses", "data": map[string]int{"count": expenses}},
+			map[string]interface{}{"type": "one_on_ones_open", "data": map[string]interface{}{"count": oneOnOnes, "entries": []interface{}{}}},
+			map[string]interface{}{"type": "discipline_active", "data": map[string]int{"count": discipline}},
 		}
 	} else if view == "hr" {
 		start, _ := dashboardWeek(time.Now().UTC())
 		var count int
 		_ = h.pool.QueryRow(r.Context(), `SELECT COUNT(*) FROM timesheets t WHERE t.company_id=$1 AND t.status='ready_to_submit' AND t.started_at<$2 AND NOT EXISTS(SELECT 1 FROM direct_reports d WHERE d.employee_id=t.employee_id)`, member.CompanyID, start).Scan(&count)
-		widgets = []interface{}{map[string]interface{}{"type": "pending_timesheets", "data": map[string]int{"count": count}}}
+		var discipline int
+		_ = h.pool.QueryRow(r.Context(), `SELECT COUNT(*) FROM discipline_cases WHERE company_id=$1 AND active=true`, member.CompanyID).Scan(&discipline)
+		widgets = []interface{}{
+			map[string]interface{}{"type": "pending_timesheets", "data": map[string]int{"count": count}},
+			map[string]interface{}{"type": "discipline_active", "data": map[string]int{"count": discipline}},
+		}
 	} else if view == "accountant" {
 		var count int
 		_ = h.pool.QueryRow(r.Context(), `SELECT COUNT(*) FROM expenses WHERE company_id=$1 AND status='accounting_approval'`, member.CompanyID).Scan(&count)
@@ -199,8 +209,45 @@ func (h *Handler) meDashboardWidgets(r *http.Request, member companyauth.Member)
 		map[string]interface{}{"type": "timesheet_current_week", "data": timesheet},
 	}
 	if wfhEnabled {
-		widgets = append(widgets, map[string]interface{}{"type":"wfh_today","data":map[string]bool{"work_from_home":wfhToday}})
+		widgets = append(widgets, map[string]interface{}{"type": "wfh_today", "data": map[string]bool{"work_from_home": wfhToday}})
 	}
+
+	// Grow widgets
+	var moraleLogged bool
+	var moraleID string
+	var emotion int
+	var moraleComment *string
+	var moraleCreated time.Time
+	if h.pool.QueryRow(r.Context(), `
+		SELECT id, emotion, comment, created_at FROM morales
+		WHERE employee_id=$1 AND created_at::date=$2::date LIMIT 1`, member.EmployeeID, today,
+	).Scan(&moraleID, &emotion, &moraleComment, &moraleCreated) == nil {
+		moraleLogged = true
+	}
+	var moralePayload interface{}
+	if moraleLogged {
+		moralePayload = map[string]interface{}{
+			"id": moraleID, "employee_id": member.EmployeeID, "emotion": emotion,
+			"comment": moraleComment, "created_at": moraleCreated.UTC().Format(time.RFC3339),
+		}
+	}
+	widgets = append(widgets, map[string]interface{}{
+		"type": "morale_today",
+		"data": map[string]interface{}{"logged": moraleLogged, "morale": moralePayload},
+	})
+	widgets = append(widgets, map[string]interface{}{
+		"type": "one_on_one_current",
+		"data": map[string]interface{}{"entries": []interface{}{}},
+	})
+	var eCoffeeEnabled bool
+	_ = h.pool.QueryRow(r.Context(), `SELECT e_coffee_enabled FROM companies WHERE id=$1`, member.CompanyID).Scan(&eCoffeeEnabled)
+	if eCoffeeEnabled {
+		widgets = append(widgets, map[string]interface{}{
+			"type": "e_coffee_current",
+			"data": map[string]interface{}{"match": nil},
+		})
+	}
+
 	return widgets
 }
 

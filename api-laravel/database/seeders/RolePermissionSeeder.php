@@ -72,6 +72,18 @@ class RolePermissionSeeder extends Seeder
             'recruiting.delete',
             'recruiting.hire',
             'recruiting.manage_templates',
+            'morale.view',
+            'morale.log',
+            'one_on_ones.view',
+            'one_on_ones.manage',
+            'rate_manager.answer',
+            'rate_manager.view_results',
+            'skills.view',
+            'skills.manage',
+            'e_coffee.view',
+            'e_coffee.manage',
+            'discipline.view',
+            'discipline.manage',
         ];
 
         foreach ($permissions as $name) {
@@ -147,6 +159,18 @@ class RolePermissionSeeder extends Seeder
             'recruiting.delete',
             'recruiting.hire',
             'recruiting.manage_templates',
+            'morale.view',
+            'morale.log',
+            'one_on_ones.view',
+            'one_on_ones.manage',
+            'rate_manager.answer',
+            'rate_manager.view_results',
+            'skills.view',
+            'skills.manage',
+            'e_coffee.view',
+            'e_coffee.manage',
+            'discipline.view',
+            'discipline.manage',
         ]);
 
         $accountant->syncPermissions([
@@ -156,6 +180,15 @@ class RolePermissionSeeder extends Seeder
 
         $manager->syncPermissions([
             'timesheets.approve',
+            'morale.view',
+            'morale.log',
+            'one_on_ones.view',
+            'one_on_ones.manage',
+            'rate_manager.view_results',
+            'skills.view',
+            'e_coffee.view',
+            'discipline.view',
+            'discipline.manage',
         ]);
 
         $employee->syncPermissions([
@@ -176,6 +209,11 @@ class RolePermissionSeeder extends Seeder
             'expenses.view',
             'projects.view',
             'projects.create',
+            'morale.log',
+            'one_on_ones.view',
+            'rate_manager.answer',
+            'skills.view',
+            'e_coffee.view',
         ]);
     }
 }

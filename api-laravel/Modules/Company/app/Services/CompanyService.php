@@ -121,6 +121,7 @@ final class CompanyService
             'slug' => $company->slug,
             'currency' => $company->currency,
             'work_from_home_enabled' => (bool) $company->work_from_home_enabled,
+            'e_coffee_enabled' => (bool) $company->e_coffee_enabled,
             'logo_url' => $company->getFirstMediaUrl('logo') ?: null,
         ];
 

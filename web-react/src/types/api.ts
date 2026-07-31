@@ -218,6 +218,33 @@ export type DashboardWidget =
       type: 'pending_accounting_expenses'
       data: { count: number }
     }
+  | {
+      type: 'morale_today'
+      data: {
+        logged: boolean
+        morale: Morale | null
+      }
+    }
+  | {
+      type: 'one_on_one_current'
+      data: { entries: OneOnOneEntry[] }
+    }
+  | {
+      type: 'rate_manager_pending'
+      data: { answers: RateYourManagerAnswer[] }
+    }
+  | {
+      type: 'e_coffee_current'
+      data: { match: ECoffeeMatch | null }
+    }
+  | {
+      type: 'one_on_ones_open'
+      data: { count: number; entries: OneOnOneEntry[] }
+    }
+  | {
+      type: 'discipline_active'
+      data: { count: number }
+    }
 
 export type Worklog = {
   id: string
@@ -595,3 +622,93 @@ export type EmployeeImportResult = {
   created: number
   errors: { row: number; message: string }[]
 }
+
+export type Morale = {
+  id: string
+  employee_id: string
+  emotion: 1 | 2 | 3
+  comment: string | null
+  created_at: string
+}
+
+export type MoraleHistoryPoint = {
+  id: string
+  average: number
+  number_of_employees?: number
+  number_of_team_members?: number
+  created_at: string
+}
+
+export type OneOnOneChecklistItem = {
+  id: string
+  description: string
+  checked: boolean
+}
+
+export type OneOnOneNote = {
+  id: string
+  note: string
+  created_at?: string
+}
+
+export type OneOnOneEntry = {
+  id: string
+  company_id?: string
+  manager: EmployeeSummary
+  employee: EmployeeSummary
+  happened: boolean
+  happened_at: string | null
+  talking_points: OneOnOneChecklistItem[]
+  action_items: OneOnOneChecklistItem[]
+  notes: OneOnOneNote[]
+  created_at?: string
+}
+
+export type RateYourManagerAnswer = {
+  id: string
+  survey_id: string
+  employee?: EmployeeSummary
+  manager: EmployeeSummary | null
+  active: boolean
+  rating: 'bad' | 'average' | 'good' | null
+  comment: string | null
+  reveal_identity_to_manager: boolean
+  valid_until_at: string | null
+  survey_active?: boolean
+}
+
+export type Skill = {
+  id: string
+  name: string
+  employees_count?: number
+}
+
+export type ECoffeeMatch = {
+  id: string
+  e_coffee_id: string
+  batch_number: number
+  employee: EmployeeSummary
+  with_employee: EmployeeSummary
+  happened: boolean
+}
+
+export type DisciplineEvent = {
+  id: string
+  author_name: string
+  author?: EmployeeSummary | null
+  happened_at: string
+  description: string
+  files: { id: number; file_name: string; mime_type: string; size: number; url: string }[]
+  created_at?: string
+}
+
+export type DisciplineCase = {
+  id: string
+  employee: EmployeeSummary
+  opened_by?: EmployeeSummary | null
+  opened_by_employee_name: string | null
+  active: boolean
+  created_at: string
+  events?: DisciplineEvent[]
+}
+

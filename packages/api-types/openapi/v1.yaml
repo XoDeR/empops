@@ -2949,6 +2949,654 @@ paths:
         "200":
           description: Abandoned
 
+  # --- Grow (Step 8) ---
+
+  /companies/{companyId}/morale/today:
+    get:
+      summary: Today's morale for current employee
+      operationId: getMoraleToday
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      responses:
+        "200":
+          description: Morale or null
+
+  /companies/{companyId}/morale:
+    post:
+      summary: Log daily morale
+      operationId: logMorale
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [emotion]
+              properties:
+                emotion: {type: integer, enum: [1, 2, 3]}
+                comment: {type: string, nullable: true}
+      responses:
+        "200": {description: Logged}
+        "409": {description: Already logged today}
+
+  /companies/{companyId}/morale/history/company:
+    get:
+      summary: Company morale history
+      operationId: companyMoraleHistory
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      responses:
+        "200": {description: History points}
+
+  /companies/{companyId}/morale/history/teams/{teamId}:
+    get:
+      summary: Team morale history
+      operationId: teamMoraleHistory
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: teamId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: History points}
+
+  /companies/{companyId}/employees/{employeeId}/morale:
+    get:
+      summary: Employee morale history
+      operationId: employeeMoraleHistory
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200": {description: Morale entries}
+
+  /companies/{companyId}/one-on-ones/me:
+    get:
+      summary: Open one-on-ones for current employee
+      operationId: listMyOneOnOnes
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      responses:
+        "200": {description: Entries}
+
+  /companies/{companyId}/one-on-ones/manager:
+    get:
+      summary: Open one-on-ones for current manager
+      operationId: listManagerOneOnOnes
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      responses:
+        "200": {description: Entries}
+
+  /companies/{companyId}/one-on-ones/{entryId}:
+    get:
+      summary: Get one-on-one entry
+      operationId: getOneOnOne
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Entry}
+
+  /companies/{companyId}/one-on-ones/{entryId}/happened:
+    post:
+      summary: Mark one-on-one happened
+      operationId: markOneOnOneHappened
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Updated}
+
+  /companies/{companyId}/one-on-ones/{entryId}/talking-points:
+    post:
+      summary: Add talking point
+      operationId: createTalkingPoint
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [description]
+              properties:
+                description: {type: string}
+      responses:
+        "200": {description: Created}
+
+  /companies/{companyId}/one-on-ones/{entryId}/talking-points/{pointId}/toggle:
+    post:
+      summary: Toggle talking point checked
+      operationId: toggleTalkingPoint
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: pointId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Toggled}
+
+  /companies/{companyId}/one-on-ones/{entryId}/talking-points/{pointId}:
+    delete:
+      summary: Delete talking point
+      operationId: deleteTalkingPoint
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: pointId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Deleted}
+
+  /companies/{companyId}/one-on-ones/{entryId}/action-items:
+    post:
+      summary: Add action item
+      operationId: createActionItem
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [description]
+              properties:
+                description: {type: string}
+      responses:
+        "200": {description: Created}
+
+  /companies/{companyId}/one-on-ones/{entryId}/action-items/{itemId}/toggle:
+    post:
+      summary: Toggle action item checked
+      operationId: toggleActionItem
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: itemId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Toggled}
+
+  /companies/{companyId}/one-on-ones/{entryId}/action-items/{itemId}:
+    delete:
+      summary: Delete action item
+      operationId: deleteActionItem
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: itemId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Deleted}
+
+  /companies/{companyId}/one-on-ones/{entryId}/notes:
+    post:
+      summary: Add note
+      operationId: createOneOnOneNote
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note]
+              properties:
+                note: {type: string}
+      responses:
+        "200": {description: Created}
+
+  /companies/{companyId}/one-on-ones/{entryId}/notes/{noteId}:
+    delete:
+      summary: Delete note
+      operationId: deleteOneOnOneNote
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: entryId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: noteId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Deleted}
+
+  /companies/{companyId}/rate-your-manager/pending:
+    get:
+      summary: Pending rate-your-manager answers
+      operationId: pendingRateAnswers
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      responses:
+        "200": {description: Pending answers}
+
+  /companies/{companyId}/rate-your-manager/answers/{answerId}:
+    post:
+      summary: Submit rating
+      operationId: submitRateAnswer
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: answerId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating]
+              properties:
+                rating: {type: string, enum: [bad, average, good]}
+      responses:
+        "200": {description: Submitted}
+
+  /companies/{companyId}/rate-your-manager/answers/{answerId}/comment:
+    post:
+      summary: Comment on rating
+      operationId: commentRateAnswer
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: answerId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment: {type: string, nullable: true}
+                reveal_identity_to_manager: {type: boolean}
+      responses:
+        "200": {description: Updated}
+
+  /companies/{companyId}/employees/{employeeId}/rate-your-manager-surveys:
+    get:
+      summary: Surveys for a manager
+      operationId: listManagerSurveys
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200": {description: Surveys}
+
+  /companies/{companyId}/skills:
+    get:
+      summary: List company skills
+      operationId: listSkills
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      responses:
+        "200": {description: Skills}
+
+  /companies/{companyId}/skills/search:
+    get:
+      summary: Search skills
+      operationId: searchSkills
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: q
+          in: query
+          schema: {type: string}
+      responses:
+        "200": {description: Matches}
+
+  /companies/{companyId}/skills/{skillId}:
+    get:
+      summary: Skill detail
+      operationId: getSkill
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: skillId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Skill with employees}
+    patch:
+      summary: Rename skill
+      operationId: updateSkill
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: skillId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: {type: string}
+      responses:
+        "200": {description: Updated}
+    delete:
+      summary: Delete skill
+      operationId: deleteSkill
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: skillId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Deleted}
+
+  /companies/{companyId}/employees/{employeeId}/skills:
+    get:
+      summary: Employee skills
+      operationId: listEmployeeSkills
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200": {description: Skills}
+    post:
+      summary: Attach skill to employee
+      operationId: attachEmployeeSkill
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: {type: string}
+      responses:
+        "200": {description: Attached}
+
+  /companies/{companyId}/employees/{employeeId}/skills/{skillId}:
+    delete:
+      summary: Detach skill from employee
+      operationId: detachEmployeeSkill
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+        - name: skillId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Detached}
+
+  /companies/{companyId}/e-coffee:
+    get:
+      summary: Get e-coffee enabled flag
+      operationId: getECoffee
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      responses:
+        "200": {description: Flag}
+    patch:
+      summary: Set e-coffee enabled flag
+      operationId: updateECoffee
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties:
+                enabled: {type: boolean}
+      responses:
+        "200": {description: Updated}
+
+  /companies/{companyId}/e-coffee/current:
+    get:
+      summary: Current e-coffee match for actor
+      operationId: currentECoffee
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      responses:
+        "200": {description: Match or null}
+
+  /companies/{companyId}/e-coffee/matches/{matchId}/happened:
+    post:
+      summary: Mark e-coffee match happened
+      operationId: markECoffeeHappened
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: matchId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Updated}
+
+  /companies/{companyId}/employees/{employeeId}/e-coffees:
+    get:
+      summary: Employee e-coffee history
+      operationId: employeeECoffeeHistory
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200": {description: Matches}
+
+  /companies/{companyId}/discipline-cases:
+    get:
+      summary: List discipline cases
+      operationId: listDisciplineCases
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: active
+          in: query
+          schema: {type: boolean}
+      responses:
+        "200": {description: Cases}
+    post:
+      summary: Create discipline case
+      operationId: createDisciplineCase
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: "#/components/parameters/CompanyId"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employee_id]
+              properties:
+                employee_id: {type: string, format: uuid}
+      responses:
+        "200": {description: Created}
+
+  /companies/{companyId}/discipline-cases/{caseId}:
+    get:
+      summary: Get discipline case
+      operationId: getDisciplineCase
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: caseId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Case with events}
+    delete:
+      summary: Delete discipline case
+      operationId: deleteDisciplineCase
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: caseId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Deleted}
+
+  /companies/{companyId}/discipline-cases/{caseId}/toggle:
+    post:
+      summary: Toggle discipline case active
+      operationId: toggleDisciplineCase
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: caseId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Toggled}
+
+  /companies/{companyId}/discipline-cases/{caseId}/events:
+    post:
+      summary: Add discipline event
+      operationId: createDisciplineEvent
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: caseId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [happened_at, description]
+              properties:
+                happened_at: {type: string, format: date}
+                description: {type: string}
+      responses:
+        "200": {description: Created}
+
+  /companies/{companyId}/discipline-cases/{caseId}/events/{eventId}:
+    delete:
+      summary: Delete discipline event
+      operationId: deleteDisciplineEvent
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: caseId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: eventId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Deleted}
+
+  /companies/{companyId}/discipline-cases/{caseId}/events/{eventId}/files:
+    post:
+      summary: Attach file to discipline event
+      operationId: attachDisciplineFile
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: caseId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: eventId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [temporary_upload_id, media_id]
+              properties:
+                temporary_upload_id: {type: integer}
+                media_id: {type: integer}
+      responses:
+        "200": {description: Attached}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -4718,3 +5366,98 @@ components:
               reference_number:
                 type: string
                 nullable: true
+
+    Morale:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        employee_id: {type: string, format: uuid}
+        emotion: {type: integer, enum: [1, 2, 3]}
+        comment: {type: string, nullable: true}
+        created_at: {type: string, format: date-time}
+
+    MoraleHistoryPoint:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        average: {type: number}
+        number_of_employees: {type: integer}
+        number_of_team_members: {type: integer}
+        created_at: {type: string, format: date-time}
+
+    OneOnOneEntry:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        manager: {$ref: "#/components/schemas/EmployeeSummary"}
+        employee: {$ref: "#/components/schemas/EmployeeSummary"}
+        happened: {type: boolean}
+        happened_at: {type: string, format: date-time, nullable: true}
+        talking_points:
+          type: array
+          items:
+            type: object
+            properties:
+              id: {type: string, format: uuid}
+              description: {type: string}
+              checked: {type: boolean}
+        action_items:
+          type: array
+          items:
+            type: object
+            properties:
+              id: {type: string, format: uuid}
+              description: {type: string}
+              checked: {type: boolean}
+        notes:
+          type: array
+          items:
+            type: object
+            properties:
+              id: {type: string, format: uuid}
+              note: {type: string}
+
+    RateYourManagerAnswer:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        survey_id: {type: string, format: uuid}
+        rating: {type: string, enum: [bad, average, good], nullable: true}
+        comment: {type: string, nullable: true}
+        reveal_identity_to_manager: {type: boolean}
+        active: {type: boolean}
+        valid_until_at: {type: string, format: date-time, nullable: true}
+
+    Skill:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        employees_count: {type: integer}
+
+    ECoffeeMatch:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        e_coffee_id: {type: string, format: uuid}
+        batch_number: {type: integer}
+        employee: {$ref: "#/components/schemas/EmployeeSummary"}
+        with_employee: {$ref: "#/components/schemas/EmployeeSummary"}
+        happened: {type: boolean}
+
+    DisciplineCase:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        employee: {$ref: "#/components/schemas/EmployeeSummary"}
+        opened_by_employee_name: {type: string, nullable: true}
+        active: {type: boolean}
+        events:
+          type: array
+          items:
+            type: object
+            properties:
+              id: {type: string, format: uuid}
+              author_name: {type: string}
+              happened_at: {type: string, format: date}
+              description: {type: string}

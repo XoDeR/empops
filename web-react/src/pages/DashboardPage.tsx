@@ -6,10 +6,14 @@ import { useCompanyContext } from '@/routes/CompanyLayout'
 import type {
   DashboardShell,
   DashboardWidget,
+  ECoffeeMatch,
   Expense,
   ExpenseCategory,
+  Morale,
+  OneOnOneEntry,
   ProjectSummary,
   ProjectTaskSummary,
+  RateYourManagerAnswer,
   Timesheet,
   Worklog,
 } from '@/types/api'
@@ -30,6 +34,203 @@ function widgetOf<T extends DashboardWidget['type']>(
   type: T,
 ): Extract<DashboardWidget, { type: T }> | undefined {
   return widgets.find((w): w is Extract<DashboardWidget, { type: T }> => w.type === type)
+}
+
+function MoraleWidget({
+  companyId,
+  data,
+}: {
+  companyId: string
+  data: Extract<DashboardWidget, { type: 'morale_today' }>['data']
+}) {
+  const qc = useQueryClient()
+  const [error, setError] = useState<string | null>(null)
+  const save = useMutation({
+    mutationFn: async (emotion: 1 | 2 | 3) => {
+      await authFetch<Morale>(`/companies/${companyId}/morale`, {
+        method: 'POST',
+        body: JSON.stringify({ emotion }),
+      })
+    },
+    onSuccess: () => {
+      setError(null)
+      void qc.invalidateQueries({ queryKey: ['dashboard', companyId, 'me'] })
+    },
+    onError: (e: Error) => setError(e.message),
+  })
+  const labels = { 1: 'Bad', 2: 'Normal', 3: 'Good' } as const
+  return (
+    <section className="rounded-2xl border border-black/10 bg-white/70 p-4">
+      <h3 className="font-medium">Today’s morale</h3>
+      {data.logged && data.morale ? (
+        <p className="mt-2 text-sm text-black/70">
+          Logged: {labels[data.morale.emotion as 1 | 2 | 3]}
+        </p>
+      ) : (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {([1, 2, 3] as const).map((emotion) => (
+            <button
+              key={emotion}
+              type="button"
+              disabled={save.isPending}
+              className="rounded-lg border border-black/15 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+              onClick={() => save.mutate(emotion)}
+            >
+              {labels[emotion]}
+            </button>
+          ))}
+        </div>
+      )}
+      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+    </section>
+  )
+}
+
+function OneOnOneWidget({
+  companyId,
+  data,
+}: {
+  companyId: string
+  data: { entries: OneOnOneEntry[] }
+}) {
+  return (
+    <section className="rounded-2xl border border-black/10 bg-white/70 p-4">
+      <h3 className="font-medium">One-on-ones</h3>
+      {(data.entries ?? []).length === 0 ? (
+        <p className="mt-2 text-sm text-black/55">No open 1:1s.</p>
+      ) : (
+        <ul className="mt-2 space-y-1 text-sm">
+          {data.entries.map((e) => (
+            <li key={e.id}>
+              <NavLink
+                to={`/companies/${companyId}/one-on-ones/${e.id}`}
+                className="text-[var(--empops-accent)] hover:underline"
+              >
+                {e.manager.first_name} ↔ {e.employee.first_name}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+function RateManagerWidget({
+  companyId,
+  data,
+}: {
+  companyId: string
+  data: { answers: RateYourManagerAnswer[] }
+}) {
+  const qc = useQueryClient()
+  const [comment, setComment] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const answer = data.answers[0]
+  const rate = useMutation({
+    mutationFn: async (rating: 'bad' | 'average' | 'good') => {
+      await authFetch(`/companies/${companyId}/rate-your-manager/answers/${answer.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ rating }),
+      })
+      if (comment.trim()) {
+        await authFetch(
+          `/companies/${companyId}/rate-your-manager/answers/${answer.id}/comment`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              comment,
+              reveal_identity_to_manager: false,
+            }),
+          },
+        )
+      }
+    },
+    onSuccess: () => {
+      setError(null)
+      void qc.invalidateQueries({ queryKey: ['dashboard', companyId, 'me'] })
+    },
+    onError: (e: Error) => setError(e.message),
+  })
+  if (!answer) return null
+  return (
+    <section className="rounded-2xl border border-black/10 bg-white/70 p-4">
+      <h3 className="font-medium">Rate your manager</h3>
+      <p className="mt-1 text-sm text-black/60">
+        {answer.manager
+          ? `${answer.manager.first_name} ${answer.manager.last_name}`
+          : 'Your manager'}
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {(['bad', 'average', 'good'] as const).map((rating) => (
+          <button
+            key={rating}
+            type="button"
+            className="rounded-lg border border-black/15 px-3 py-1.5 text-sm capitalize"
+            disabled={rate.isPending}
+            onClick={() => rate.mutate(rating)}
+          >
+            {rating}
+          </button>
+        ))}
+      </div>
+      <textarea
+        className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-sm"
+        rows={2}
+        placeholder="Optional comment"
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+      />
+      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+    </section>
+  )
+}
+
+function ECoffeeWidget({
+  companyId,
+  data,
+}: {
+  companyId: string
+  data: { match: ECoffeeMatch | null }
+}) {
+  const qc = useQueryClient()
+  const match = data.match
+  const mark = useMutation({
+    mutationFn: async () => {
+      if (!match) return
+      await authFetch(`/companies/${companyId}/e-coffee/matches/${match.id}/happened`, {
+        method: 'POST',
+      })
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['dashboard', companyId, 'me'] }),
+  })
+  return (
+    <section className="rounded-2xl border border-black/10 bg-white/70 p-4">
+      <h3 className="font-medium">e-Coffee</h3>
+      {!match ? (
+        <p className="mt-2 text-sm text-black/55">No active match.</p>
+      ) : (
+        <div className="mt-2 text-sm">
+          <p>
+            With {match.with_employee.first_name} {match.with_employee.last_name} (or{' '}
+            {match.employee.first_name})
+          </p>
+          {match.happened ? (
+            <p className="mt-1 text-black/55">Marked as happened</p>
+          ) : (
+            <button
+              type="button"
+              className="mt-2 rounded-lg border border-black/15 px-3 py-1.5 text-sm"
+              disabled={mark.isPending}
+              onClick={() => mark.mutate()}
+            >
+              Mark happened
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  )
 }
 
 function WorklogWidget({
@@ -681,14 +882,20 @@ export default function DashboardPage() {
   const pendingTs = widgetOf(widgets, 'pending_timesheets')
   const pendingEx = widgetOf(widgets, 'pending_expenses')
   const pendingAcc = widgetOf(widgets, 'pending_accounting_expenses')
+  const morale = widgetOf(widgets, 'morale_today')
+  const oneOnOnes = widgetOf(widgets, 'one_on_one_current')
+  const rateManager = widgetOf(widgets, 'rate_manager_pending')
+  const eCoffee = widgetOf(widgets, 'e_coffee_current')
+  const managerOnes = widgetOf(widgets, 'one_on_ones_open')
+  const discipline = widgetOf(widgets, 'discipline_active')
 
   const subtitle =
     view === 'me'
-      ? 'Work logs, timesheets, expenses, and Q&A.'
+      ? 'Work logs, morale, 1:1s, timesheets, and Q&A.'
       : view === 'manager'
-        ? 'Approve timesheets and expenses for your reports.'
+        ? 'Approve timesheets/expenses and run 1:1s.'
         : view === 'hr'
-          ? 'Approve orphan / past-week timesheets.'
+          ? 'Approve timesheets and discipline cases.'
           : view === 'accountant'
             ? 'Finalize expenses in the accounting queue.'
             : 'Team overview shell.'
@@ -734,6 +941,10 @@ export default function DashboardPage() {
       {dashQuery.data && view === 'me' && companyId && (
         <div className="grid gap-4 lg:grid-cols-2">
           {worklog && <WorklogWidget companyId={companyId} data={worklog.data} />}
+          {morale && <MoraleWidget companyId={companyId} data={morale.data} />}
+          {oneOnOnes && <OneOnOneWidget companyId={companyId} data={oneOnOnes.data} />}
+          {rateManager && <RateManagerWidget companyId={companyId} data={rateManager.data} />}
+          {eCoffee && <ECoffeeWidget companyId={companyId} data={eCoffee.data} />}
           {question && <ActiveQuestionWidget companyId={companyId} data={question.data} />}
           {timesheet && <TimesheetWidget companyId={companyId} data={timesheet.data} />}
           {wfh && (
@@ -757,8 +968,16 @@ export default function DashboardPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-black/10 bg-white/70 p-4 text-sm text-black/70 lg:col-span-2">
             Pending timesheets: {pendingTs?.data.count ?? 0} · Pending expenses:{' '}
-            {pendingEx?.data.count ?? 0}
+            {pendingEx?.data.count ?? 0} · Open 1:1s: {managerOnes?.data.count ?? 0} ·
+            Discipline: {discipline?.data.count ?? 0}
           </div>
+          {managerOnes && <OneOnOneWidget companyId={companyId} data={managerOnes.data} />}
+          <NavLink
+            to={`/companies/${companyId}/discipline`}
+            className="rounded-2xl border border-black/10 bg-white/70 p-4 text-sm hover:bg-white"
+          >
+            View discipline cases →
+          </NavLink>
           <PendingTimesheetsPanel companyId={companyId} />
           <PendingExpensesPanel companyId={companyId} mode="manager" />
         </div>
@@ -767,8 +986,29 @@ export default function DashboardPage() {
       {dashQuery.data && view === 'hr' && companyId && (
         <div className="space-y-4">
           <p className="text-sm text-black/60">
-            Pending orphan timesheets: {pendingTs?.data.count ?? 0}
+            Pending orphan timesheets: {pendingTs?.data.count ?? 0} · Active discipline:{' '}
+            {discipline?.data.count ?? 0}
           </p>
+          <div className="flex flex-wrap gap-3 text-sm">
+            <NavLink
+              to={`/companies/${companyId}/discipline`}
+              className="text-[var(--empops-accent)] hover:underline"
+            >
+              Discipline
+            </NavLink>
+            <NavLink
+              to={`/companies/${companyId}/morale`}
+              className="text-[var(--empops-accent)] hover:underline"
+            >
+              Morale history
+            </NavLink>
+            <NavLink
+              to={`/companies/${companyId}/skills`}
+              className="text-[var(--empops-accent)] hover:underline"
+            >
+              Skills
+            </NavLink>
+          </div>
           <PendingTimesheetsPanel companyId={companyId} />
         </div>
       )}

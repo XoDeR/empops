@@ -12,6 +12,7 @@ use Modules\Employee\Models\DirectReport;
 use Modules\Employee\Models\Employee;
 use Modules\Employee\Services\WorklogService;
 use Modules\Finance\Services\FinanceService;
+use Modules\Grow\Services\GrowService;
 use Modules\Notification\Services\NotificationService;
 use Modules\Team\Models\Team;
 use Modules\Time\Services\TimeService;
@@ -24,6 +25,7 @@ class DashboardController extends Controller
         private readonly NotificationService $notifications,
         private readonly TimeService $time,
         private readonly FinanceService $finance,
+        private readonly GrowService $grow,
     ) {}
 
     public function me(Request $request): JsonResponse
@@ -131,6 +133,43 @@ class DashboardController extends Controller
                 ],
             ];
 
+            $todayMorale = $this->grow->todayMorale($actor);
+            $widgets[] = [
+                'type' => 'morale_today',
+                'data' => [
+                    'logged' => $todayMorale !== null,
+                    'morale' => $todayMorale ? $this->grow->moralePayload($todayMorale) : null,
+                ],
+            ];
+
+            $this->grow->ensureOpenOneOnOnesForEmployee($company, $actor);
+            $openOnes = $this->grow->listOpenOneOnOnesForEmployee($company, $actor);
+            $widgets[] = [
+                'type' => 'one_on_one_current',
+                'data' => [
+                    'entries' => $openOnes,
+                ],
+            ];
+
+            $pendingRates = $this->grow->pendingRateAnswers($actor);
+            if (count($pendingRates) > 0) {
+                $widgets[] = [
+                    'type' => 'rate_manager_pending',
+                    'data' => [
+                        'answers' => $pendingRates,
+                    ],
+                ];
+            }
+
+            if ($company->e_coffee_enabled) {
+                $widgets[] = [
+                    'type' => 'e_coffee_current',
+                    'data' => [
+                        'match' => $this->grow->currentECoffeeMatch($company, $actor),
+                    ],
+                ];
+            }
+
             if ($company->work_from_home_enabled) {
                 $widgets[] = [
                     'type' => 'wfh_today',
@@ -140,6 +179,8 @@ class DashboardController extends Controller
                 ];
             }
         } elseif ($view === 'manager') {
+            $this->grow->ensureOpenOneOnOnesForManager($company, $actor);
+            $openOnes = $this->grow->listOpenOneOnOnesForManager($company, $actor);
             $widgets = [
                 [
                     'type' => 'pending_timesheets',
@@ -149,12 +190,27 @@ class DashboardController extends Controller
                     'type' => 'pending_expenses',
                     'data' => ['count' => $this->finance->pendingManager($company, $actor)->count()],
                 ],
+                [
+                    'type' => 'one_on_ones_open',
+                    'data' => [
+                        'count' => count($openOnes),
+                        'entries' => $openOnes,
+                    ],
+                ],
+                [
+                    'type' => 'discipline_active',
+                    'data' => ['count' => $this->grow->activeDisciplineCount($company, $actor)],
+                ],
             ];
         } elseif ($view === 'hr') {
             $widgets = [
                 [
                     'type' => 'pending_timesheets',
                     'data' => ['count' => $this->time->pending($company, $actor)->count()],
+                ],
+                [
+                    'type' => 'discipline_active',
+                    'data' => ['count' => $this->grow->activeDisciplineCount($company, $actor)],
                 ],
             ];
         } elseif ($view === 'accountant') {

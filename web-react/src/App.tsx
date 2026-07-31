@@ -11,6 +11,11 @@ import ProjectsPage from '@/pages/ProjectsPage'
 import ProjectDetailPage from '@/pages/ProjectDetailPage'
 import RecruitingPage from '@/pages/RecruitingPage'
 import JobOpeningDetailPage from '@/pages/JobOpeningDetailPage'
+import OneOnOneDetailPage from '@/pages/OneOnOneDetailPage'
+import DisciplineListPage from '@/pages/DisciplineListPage'
+import DisciplineDetailPage from '@/pages/DisciplineDetailPage'
+import SkillsPage from '@/pages/SkillsPage'
+import MoraleHistoryPage from '@/pages/MoraleHistoryPage'
 import JobsPage from '@/pages/public/JobsPage'
 import CompanyJobsPage from '@/pages/public/CompanyJobsPage'
 import JobApplyPage from '@/pages/public/JobApplyPage'
@@ -43,6 +48,11 @@ export default function App() {
             <Route path="projects/:projectId" element={<ProjectDetailPage />} />
             <Route path="recruiting" element={<RecruitingPage />} />
             <Route path="recruiting/:jobOpeningId" element={<JobOpeningDetailPage />} />
+            <Route path="one-on-ones/:entryId" element={<OneOnOneDetailPage />} />
+            <Route path="discipline" element={<DisciplineListPage />} />
+            <Route path="discipline/:caseId" element={<DisciplineDetailPage />} />
+            <Route path="skills" element={<SkillsPage />} />
+            <Route path="morale" element={<MoraleHistoryPage />} />
             <Route path="adminland" element={<AdminlandPage />} />
           </Route>
         </Route>

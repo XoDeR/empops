@@ -23,12 +23,14 @@ class Company extends Model implements HasMedia
         'currency',
         'code_to_join_company',
         'work_from_home_enabled',
+        'e_coffee_enabled',
     ];
 
     protected function casts(): array
     {
         return [
             'work_from_home_enabled' => 'boolean',
+            'e_coffee_enabled' => 'boolean',
         ];
     }
 

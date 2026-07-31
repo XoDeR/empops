@@ -1,0 +1,17 @@
+{
+    "name": "nwidart/grow",
+    "description": "",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Grow\\": "app/",
+            "Modules\\Grow\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}

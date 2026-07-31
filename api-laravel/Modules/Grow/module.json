@@ -1,0 +1,11 @@
+{
+    "name": "Grow",
+    "alias": "grow",
+    "description": "Morale, one-on-ones, rate-your-manager, skills, e-coffee, discipline",
+    "keywords": [],
+    "priority": 60,
+    "providers": [
+        "Modules\\Grow\\Providers\\GrowServiceProvider"
+    ],
+    "files": []
+}

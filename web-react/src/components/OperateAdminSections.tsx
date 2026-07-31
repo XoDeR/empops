@@ -186,9 +186,9 @@ export function AccountantsSection({ companyId }: { companyId: string }) {
           defaultValue=""
           id="grant-accountant"
           onChange={(e) => {
-            const employeeId = e.target.value
-            if (!employeeId) return
-            setAccountant.mutate({ employeeId, grant: true })
+            const employeeID = e.target.value
+            if (!employeeID) return
+            setAccountant.mutate({ employeeId: employeeID, grant: true })
             e.target.value = ''
           }}
         >
@@ -201,6 +201,51 @@ export function AccountantsSection({ companyId }: { companyId: string }) {
         </select>
       </div>
       {error && <p className="text-sm text-red-700">{error}</p>}
+    </section>
+  )
+}
+
+export function ECoffeeAdminSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+
+  const setting = useQuery({
+    queryKey: ['e-coffee-setting', companyId],
+    queryFn: async () => {
+      const res = await authFetch<{ enabled: boolean }>(`/companies/${companyId}/e-coffee`)
+      return res.data
+    },
+  })
+
+  const toggle = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const res = await authFetch<{ enabled: boolean }>(`/companies/${companyId}/e-coffee`, {
+        method: 'PATCH',
+        body: JSON.stringify({ enabled }),
+      })
+      return res.data
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['e-coffee-setting', companyId] })
+      void qc.invalidateQueries({ queryKey: ['company', companyId] })
+    },
+  })
+
+  const enabled = setting.data?.enabled ?? false
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-black/10 bg-white/80 p-5 shadow-sm">
+      <h2 className="text-lg font-semibold">e-Coffee</h2>
+      <p className="text-sm text-black/60">
+        When enabled, the weekly pairing job matches unlocked employees for informal coffee chats.
+      </p>
+      <button
+        type="button"
+        className="rounded-lg border border-black/15 px-3 py-2 text-sm hover:bg-white disabled:opacity-60"
+        disabled={toggle.isPending || setting.isLoading}
+        onClick={() => toggle.mutate(!enabled)}
+      >
+        {enabled ? 'Enabled — click to disable' : 'Disabled — click to enable'}
+      </button>
     </section>
   )
 }

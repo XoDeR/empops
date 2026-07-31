@@ -10,6 +10,7 @@ import { ImageUploadField } from '@/components/ImageUploadField'
 import { CompanyNewsSection, QuestionsSection } from '@/components/CommunicateAdminSections'
 import {
   AccountantsSection,
+  ECoffeeAdminSection,
   ExpenseCategoriesSection,
   WorkFromHomeAdminSection,
 } from '@/components/OperateAdminSections'
@@ -732,6 +733,7 @@ export default function AdminlandPage() {
       <QuestionsSection companyId={companyId} />
       <ExpenseCategoriesSection companyId={companyId} />
       <WorkFromHomeAdminSection companyId={companyId} />
+      <ECoffeeAdminSection companyId={companyId} />
       <AccountantsSection companyId={companyId} />
       <PositionsSection companyId={companyId} />
       <EmployeeStatusesSection companyId={companyId} />
