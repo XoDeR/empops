@@ -61,6 +61,11 @@ class RolePermissionSeeder extends Seeder
             'expenses.delete',
             'expenses.manage_categories',
             'expenses.finalize',
+            'projects.view',
+            'projects.create',
+            'projects.update',
+            'projects.delete',
+            'projects.manage_members',
         ];
 
         foreach ($permissions as $name) {
@@ -125,6 +130,11 @@ class RolePermissionSeeder extends Seeder
             'expenses.delete',
             'expenses.manage_categories',
             'expenses.finalize',
+            'projects.view',
+            'projects.create',
+            'projects.update',
+            'projects.delete',
+            'projects.manage_members',
         ]);
 
         $accountant->syncPermissions([
@@ -152,6 +162,8 @@ class RolePermissionSeeder extends Seeder
             'questions.view',
             'timesheets.view',
             'expenses.view',
+            'projects.view',
+            'projects.create',
         ]);
     }
 }

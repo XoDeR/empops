@@ -1,0 +1,17 @@
+{
+    "name": "nwidart/project",
+    "description": "",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Project\\": "app/",
+            "Modules\\Project\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}

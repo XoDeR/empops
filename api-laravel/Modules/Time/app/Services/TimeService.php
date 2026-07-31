@@ -7,6 +7,9 @@ use Illuminate\Support\Collection;
 use Modules\Company\Models\Company;
 use Modules\Employee\Models\DirectReport;
 use Modules\Employee\Models\Employee;
+use Modules\Project\Models\Project;
+use Modules\Project\Models\ProjectTask;
+use Modules\Project\Services\ProjectService;
 use Modules\Time\Models\EmployeeWorkFromHome;
 use Modules\Time\Models\Timesheet;
 use Modules\Time\Models\TimeTrackingEntry;
@@ -14,6 +17,9 @@ use RuntimeException;
 
 final class TimeService
 {
+    public function __construct(
+        private readonly ProjectService $projects,
+    ) {}
     public function createOrGet(Company $company, Employee $employee, ?string $date = null): Timesheet
     {
         $start = CarbonImmutable::parse($date ?? now()->toDateString())->startOfWeek();
@@ -48,11 +54,56 @@ final class TimeService
             throw new RuntimeException('Entry date must be within the timesheet week', 422);
         }
 
+        $projectId = $data['project_id'] ?? null;
+        $projectTaskId = $data['project_task_id'] ?? null;
+
+        if ($projectTaskId !== null) {
+            $task = ProjectTask::query()
+                ->with('project')
+                ->where('id', $projectTaskId)
+                ->firstOrFail();
+
+            if ($projectId !== null && (string) $task->project_id !== (string) $projectId) {
+                throw new RuntimeException('Task does not belong to the specified project', 422);
+            }
+
+            if ((string) $task->project->company_id !== (string) $timesheet->company_id) {
+                throw new RuntimeException('Project does not belong to this company', 422);
+            }
+
+            $projectId = (string) $task->project_id;
+
+            $match = [
+                'timesheet_id' => $timesheet->id,
+                'happened_at' => $date->toDateString(),
+                'project_task_id' => $projectTaskId,
+            ];
+        } else {
+            if ($projectId !== null) {
+                Project::query()
+                    ->where('company_id', $timesheet->company_id)
+                    ->where('id', $projectId)
+                    ->firstOrFail();
+            }
+
+            $match = [
+                'timesheet_id' => $timesheet->id,
+                'happened_at' => $date->toDateString(),
+                'project_id' => null,
+                'project_task_id' => null,
+            ];
+        }
+
         $existing = TimeTrackingEntry::query()
             ->where('timesheet_id', $timesheet->id)
-            ->where('employee_id', $timesheet->employee_id)
             ->whereDate('happened_at', $date->toDateString())
+            ->when(
+                $projectTaskId !== null,
+                fn ($query) => $query->where('project_task_id', $projectTaskId),
+                fn ($query) => $query->whereNull('project_id')->whereNull('project_task_id'),
+            )
             ->first();
+
         $otherDuration = (int) TimeTrackingEntry::query()
             ->where('timesheet_id', $timesheet->id)
             ->when($existing, fn ($query) => $query->where('id', '!=', $existing->id))
@@ -63,12 +114,11 @@ final class TimeService
         }
 
         TimeTrackingEntry::query()->updateOrCreate(
+            $match,
             [
-                'timesheet_id' => $timesheet->id,
                 'employee_id' => $timesheet->employee_id,
-                'happened_at' => $date->toDateString(),
-            ],
-            [
+                'project_id' => $projectId,
+                'project_task_id' => $projectTaskId,
                 'duration' => $data['duration'],
                 'description' => $data['description'] ?? null,
             ],
@@ -78,7 +128,7 @@ final class TimeService
             $timesheet->update(['status' => 'open', 'approver_id' => null, 'approved_at' => null]);
         }
 
-        return $timesheet->fresh(['employee', 'approver', 'entries']);
+        return $timesheet->fresh(['employee', 'approver', 'entries.project', 'entries.projectTask']);
     }
 
     public function deleteEntry(Timesheet $timesheet, string $entryId): Timesheet
@@ -178,6 +228,16 @@ final class TimeService
         return $enabled;
     }
 
+    public function listProjectsForTimesheet(Company $company, Employee $employee): Collection
+    {
+        return $this->projects->listProjectsForTimesheet($company, $employee);
+    }
+
+    public function listTasksForTimesheet(Company $company, Employee $employee, string $projectId): Collection
+    {
+        return $this->projects->listTasksForTimesheet($company, $employee, $projectId);
+    }
+
     public function currentWeekPayload(Company $company, Employee $employee): array
     {
         return $this->payload($this->createOrGet($company, $employee));
@@ -193,7 +253,7 @@ final class TimeService
 
     public function payload(Timesheet $timesheet): array
     {
-        $timesheet->loadMissing(['employee', 'approver', 'entries']);
+        $timesheet->loadMissing(['employee', 'approver', 'entries.project', 'entries.projectTask']);
 
         return [
             'id' => (string) $timesheet->id,
@@ -206,15 +266,26 @@ final class TimeService
             'approved_at' => $timesheet->approved_at?->toIso8601String(),
             'approver_id' => $timesheet->approver_id ? (string) $timesheet->approver_id : null,
             'approver_name' => $timesheet->approver?->fullName(),
-            'entries' => $timesheet->entries->map(fn (TimeTrackingEntry $entry) => [
-                'id' => (string) $entry->id,
-                'timesheet_id' => (string) $entry->timesheet_id,
-                'employee_id' => (string) $entry->employee_id,
-                'duration' => (int) $entry->duration,
-                'happened_at' => $entry->happened_at->toDateString(),
-                'description' => $entry->description,
-            ])->values()->all(),
+            'entries' => $timesheet->entries->map(fn (TimeTrackingEntry $entry) => $this->entryPayload($entry))->values()->all(),
             'total_duration' => (int) $timesheet->entries->sum('duration'),
+        ];
+    }
+
+    private function entryPayload(TimeTrackingEntry $entry): array
+    {
+        $entry->loadMissing(['project', 'projectTask']);
+
+        return [
+            'id' => (string) $entry->id,
+            'timesheet_id' => (string) $entry->timesheet_id,
+            'employee_id' => (string) $entry->employee_id,
+            'project_id' => $entry->project_id ? (string) $entry->project_id : null,
+            'project_task_id' => $entry->project_task_id ? (string) $entry->project_task_id : null,
+            'project_name' => $entry->project?->name,
+            'project_task_title' => $entry->projectTask?->title,
+            'duration' => (int) $entry->duration,
+            'happened_at' => $entry->happened_at->toDateString(),
+            'description' => $entry->description,
         ];
     }
 

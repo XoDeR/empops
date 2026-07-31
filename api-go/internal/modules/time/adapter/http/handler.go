@@ -84,35 +84,205 @@ func (h *Handler) Show(w http.ResponseWriter, r *http.Request) {
 }
 
 type entryRequest struct {
-	HappenedAt string `json:"happened_at"`
-	Duration int `json:"duration"`
-	Description *string `json:"description"`
+	HappenedAt    string  `json:"happened_at"`
+	Duration      int     `json:"duration"`
+	Description   *string `json:"description"`
+	ProjectID     *string `json:"project_id"`
+	ProjectTaskID *string `json:"project_task_id"`
 }
 
 func (h *Handler) UpsertEntry(w http.ResponseWriter, r *http.Request) {
 	member, _ := companyauth.MemberFromContext(r.Context())
-	t, err := h.find(r.Context(), member.CompanyID, chi.URLParam(r,"timesheetId"), "", time.Time{})
-	if err != nil { response.Fail(w,404,"Timesheet not found",nil); return }
-	if t.EmployeeID != member.EmployeeID { response.Fail(w,403,"Forbidden",nil); return }
-	if t.Status != "open" && t.Status != "rejected" { response.Fail(w,409,"Only open or rejected timesheets can be edited",nil); return }
-	var req entryRequest
-	if json.NewDecoder(r.Body).Decode(&req) != nil { response.Fail(w,400,"Invalid JSON body",nil); return }
-	day, err := time.Parse("2006-01-02",req.HappenedAt)
-	if err != nil || req.Duration < 1 || req.Duration > 1440 { response.Fail(w,422,"invalid entry",nil); return }
-	if day.Before(t.StartedAt) || day.After(t.EndedAt) { response.Fail(w,422,"Entry date must be within the timesheet week",nil); return }
-	var other int
-	_ = h.pool.QueryRow(r.Context(),`SELECT COALESCE(SUM(duration),0) FROM time_tracking_entries WHERE timesheet_id=$1 AND happened_at<>$2`,t.ID,day).Scan(&other)
-	if other+req.Duration > 10080 { response.Fail(w,422,"Weekly duration cannot exceed 10080 minutes",nil); return }
-	_, err = h.pool.Exec(r.Context(),`INSERT INTO time_tracking_entries
-		(id,timesheet_id,employee_id,duration,happened_at,description) VALUES($1,$2,$3,$4,$5,$6)
-		ON CONFLICT(timesheet_id,employee_id,happened_at) DO UPDATE SET duration=EXCLUDED.duration,description=EXCLUDED.description,updated_at=now()`,
-		uuidv7.New(),t.ID,t.EmployeeID,req.Duration,day,req.Description)
-	if err != nil { response.Fail(w,500,"save entry failed",err.Error()); return }
-	if t.Status=="rejected" {
-		_, _ = h.pool.Exec(r.Context(),`UPDATE timesheets SET status='open',approver_id=NULL,approved_at=NULL,updated_at=now() WHERE id=$1`,t.ID)
-		t.Status="open"; t.ApproverID=nil; t.ApprovedAt=nil
+	t, err := h.find(r.Context(), member.CompanyID, chi.URLParam(r, "timesheetId"), "", time.Time{})
+	if err != nil {
+		response.Fail(w, 404, "Timesheet not found", nil)
+		return
 	}
-	h.writeTimesheet(w,r,t)
+	if t.EmployeeID != member.EmployeeID {
+		response.Fail(w, 403, "Forbidden", nil)
+		return
+	}
+	if t.Status != "open" && t.Status != "rejected" {
+		response.Fail(w, 409, "Only open or rejected timesheets can be edited", nil)
+		return
+	}
+	var req entryRequest
+	if json.NewDecoder(r.Body).Decode(&req) != nil {
+		response.Fail(w, 400, "Invalid JSON body", nil)
+		return
+	}
+	day, err := time.Parse("2006-01-02", req.HappenedAt)
+	if err != nil || req.Duration < 1 || req.Duration > 1440 {
+		response.Fail(w, 422, "invalid entry", nil)
+		return
+	}
+	if day.Before(t.StartedAt) || day.After(t.EndedAt) {
+		response.Fail(w, 422, "Entry date must be within the timesheet week", nil)
+		return
+	}
+
+	projectID := req.ProjectID
+	projectTaskID := req.ProjectTaskID
+
+	if projectTaskID != nil && *projectTaskID != "" {
+		var taskProjectID, taskCompanyID string
+		err = h.pool.QueryRow(r.Context(), `
+			SELECT pt.project_id, p.company_id FROM project_tasks pt
+			JOIN projects p ON p.id=pt.project_id
+			WHERE pt.id=$1`, *projectTaskID,
+		).Scan(&taskProjectID, &taskCompanyID)
+		if err == pgx.ErrNoRows {
+			response.Fail(w, 404, "Task not found", nil)
+			return
+		}
+		if err != nil {
+			response.Fail(w, 500, "task lookup failed", err.Error())
+			return
+		}
+		if taskCompanyID != member.CompanyID {
+			response.Fail(w, 422, "Project does not belong to this company", nil)
+			return
+		}
+		if projectID != nil && *projectID != "" && *projectID != taskProjectID {
+			response.Fail(w, 422, "Task does not belong to the specified project", nil)
+			return
+		}
+		projectID = &taskProjectID
+	} else if projectID != nil && *projectID != "" {
+		var exists bool
+		_ = h.pool.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM projects WHERE id=$1 AND company_id=$2)`, *projectID, member.CompanyID).Scan(&exists)
+		if !exists {
+			response.Fail(w, 404, "Project not found", nil)
+			return
+		}
+	}
+
+	var existingID *string
+	if projectTaskID != nil && *projectTaskID != "" {
+		var id string
+		err = h.pool.QueryRow(r.Context(), `
+			SELECT id FROM time_tracking_entries
+			WHERE timesheet_id=$1 AND happened_at=$2 AND project_task_id=$3`,
+			t.ID, day, *projectTaskID).Scan(&id)
+		if err == nil {
+			existingID = &id
+		} else if err != pgx.ErrNoRows {
+			response.Fail(w, 500, "entry lookup failed", err.Error())
+			return
+		}
+	} else {
+		var id string
+		err = h.pool.QueryRow(r.Context(), `
+			SELECT id FROM time_tracking_entries
+			WHERE timesheet_id=$1 AND happened_at=$2 AND project_task_id IS NULL AND project_id IS NULL`,
+			t.ID, day).Scan(&id)
+		if err == nil {
+			existingID = &id
+		} else if err != pgx.ErrNoRows {
+			response.Fail(w, 500, "entry lookup failed", err.Error())
+			return
+		}
+	}
+
+	var other int
+	if existingID != nil {
+		_ = h.pool.QueryRow(r.Context(), `SELECT COALESCE(SUM(duration),0) FROM time_tracking_entries WHERE timesheet_id=$1 AND id<>$2`, t.ID, *existingID).Scan(&other)
+	} else {
+		_ = h.pool.QueryRow(r.Context(), `SELECT COALESCE(SUM(duration),0) FROM time_tracking_entries WHERE timesheet_id=$1`, t.ID).Scan(&other)
+	}
+	if other+req.Duration > 10080 {
+		response.Fail(w, 422, "Weekly duration cannot exceed 10080 minutes", nil)
+		return
+	}
+
+	if existingID != nil {
+		_, err = h.pool.Exec(r.Context(), `
+			UPDATE time_tracking_entries SET duration=$2, description=$3, project_id=$4, project_task_id=$5, updated_at=now()
+			WHERE id=$1`, *existingID, req.Duration, req.Description, projectID, projectTaskID)
+	} else {
+		_, err = h.pool.Exec(r.Context(), `
+			INSERT INTO time_tracking_entries(id,timesheet_id,employee_id,duration,happened_at,description,project_id,project_task_id)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
+			uuidv7.New(), t.ID, t.EmployeeID, req.Duration, day, req.Description, projectID, projectTaskID)
+	}
+	if err != nil {
+		response.Fail(w, 500, "save entry failed", err.Error())
+		return
+	}
+	if t.Status == "rejected" {
+		_, _ = h.pool.Exec(r.Context(), `UPDATE timesheets SET status='open',approver_id=NULL,approved_at=NULL,updated_at=now() WHERE id=$1`, t.ID)
+		t.Status = "open"
+		t.ApproverID = nil
+		t.ApprovedAt = nil
+	}
+	h.writeTimesheet(w, r, t)
+}
+
+func (h *Handler) TimesheetProjects(w http.ResponseWriter, r *http.Request) {
+	member, _ := companyauth.MemberFromContext(r.Context())
+	rows, err := h.pool.Query(r.Context(), `
+		SELECT p.id, p.name, p.status, p.code, p.short_code, p.emoji
+		FROM projects p
+		JOIN employee_project ep ON ep.project_id=p.id
+		WHERE p.company_id=$1 AND ep.employee_id=$2
+		ORDER BY p.name`, member.CompanyID, member.EmployeeID)
+	if err != nil {
+		response.Fail(w, 500, "list projects failed", err.Error())
+		return
+	}
+	defer rows.Close()
+	out := []map[string]interface{}{}
+	for rows.Next() {
+		var id, name, status string
+		var code, shortCode, emoji *string
+		if err := rows.Scan(&id, &name, &status, &code, &shortCode, &emoji); err != nil {
+			response.Fail(w, 500, "scan failed", err.Error())
+			return
+		}
+		out = append(out, map[string]interface{}{
+			"id": id, "name": name, "status": status, "code": code, "short_code": shortCode, "emoji": emoji,
+		})
+	}
+	response.OK(w, "", out)
+}
+
+func (h *Handler) TimesheetProjectTasks(w http.ResponseWriter, r *http.Request) {
+	member, _ := companyauth.MemberFromContext(r.Context())
+	projectID := chi.URLParam(r, "projectId")
+	var exists bool
+	_ = h.pool.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM projects WHERE id=$1 AND company_id=$2)`, projectID, member.CompanyID).Scan(&exists)
+	if !exists {
+		response.Fail(w, 404, "Project not found", nil)
+		return
+	}
+	var isMember bool
+	_ = h.pool.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM employee_project WHERE project_id=$1 AND employee_id=$2)`, projectID, member.EmployeeID).Scan(&isMember)
+	if !isMember {
+		response.Fail(w, 403, "Forbidden", nil)
+		return
+	}
+	rows, err := h.pool.Query(r.Context(), `
+		SELECT id, title, completed, project_task_list_id
+		FROM project_tasks WHERE project_id=$1 ORDER BY title`, projectID)
+	if err != nil {
+		response.Fail(w, 500, "list tasks failed", err.Error())
+		return
+	}
+	defer rows.Close()
+	out := []map[string]interface{}{}
+	for rows.Next() {
+		var id, title string
+		var completed bool
+		var listID *string
+		if err := rows.Scan(&id, &title, &completed, &listID); err != nil {
+			response.Fail(w, 500, "scan failed", err.Error())
+			return
+		}
+		out = append(out, map[string]interface{}{
+			"id": id, "title": title, "completed": completed, "project_task_list_id": listID,
+		})
+	}
+	response.OK(w, "", out)
 }
 
 func (h *Handler) DeleteEntry(w http.ResponseWriter, r *http.Request) {
@@ -197,9 +367,23 @@ func (h *Handler) payload(ctx context.Context,t timesheet)(map[string]interface{
 	if err:=h.pool.QueryRow(ctx,`SELECT first_name,last_name,email FROM employees WHERE id=$1`,t.EmployeeID).Scan(&first,&last,&email);err!=nil{return nil,err}
 	var approverName interface{}
 	if t.ApproverID!=nil{var af,al string;if h.pool.QueryRow(ctx,`SELECT first_name,last_name FROM employees WHERE id=$1`,*t.ApproverID).Scan(&af,&al)==nil{approverName=strings.TrimSpace(af+" "+al)}}
-	rows,err:=h.pool.Query(ctx,`SELECT id,timesheet_id,employee_id,duration,happened_at,description FROM time_tracking_entries WHERE timesheet_id=$1 ORDER BY happened_at`,t.ID);if err!=nil{return nil,err};defer rows.Close()
+	rows,err:=h.pool.Query(ctx,`SELECT e.id,e.timesheet_id,e.employee_id,e.duration,e.happened_at,e.description,e.project_id,e.project_task_id,p.name,pt.title
+		FROM time_tracking_entries e
+		LEFT JOIN projects p ON p.id=e.project_id
+		LEFT JOIN project_tasks pt ON pt.id=e.project_task_id
+		WHERE e.timesheet_id=$1 ORDER BY e.happened_at`,t.ID);if err!=nil{return nil,err};defer rows.Close()
 	entries:=[]map[string]interface{}{};total:=0
-	for rows.Next(){var id,tsid,eid string;var duration int;var day time.Time;var description *string;if err:=rows.Scan(&id,&tsid,&eid,&duration,&day,&description);err!=nil{return nil,err};total+=duration;entries=append(entries,map[string]interface{}{"id":id,"timesheet_id":tsid,"employee_id":eid,"duration":duration,"happened_at":day.Format("2006-01-02"),"description":description})}
+	for rows.Next(){
+		var id,tsid,eid string;var duration int;var day time.Time;var description *string;var projectID,projectTaskID,projectName,taskTitle *string
+		if err:=rows.Scan(&id,&tsid,&eid,&duration,&day,&description,&projectID,&projectTaskID,&projectName,&taskTitle);err!=nil{return nil,err}
+		total+=duration
+		entries=append(entries,map[string]interface{}{
+			"id":id,"timesheet_id":tsid,"employee_id":eid,"duration":duration,
+			"happened_at":day.Format("2006-01-02"),"description":description,
+			"project_id":projectID,"project_task_id":projectTaskID,
+			"project_name":projectName,"project_task_title":taskTitle,
+		})
+	}
 	var approved interface{};if t.ApprovedAt!=nil{approved=t.ApprovedAt.UTC().Format(time.RFC3339)}
 	return map[string]interface{}{"id":t.ID,"company_id":t.CompanyID,"employee_id":t.EmployeeID,"employee":map[string]interface{}{"id":t.EmployeeID,"first_name":first,"last_name":last,"email":email},"started_at":t.StartedAt.Format("2006-01-02"),"ended_at":t.EndedAt.Format("2006-01-02"),"status":t.Status,"approved_at":approved,"approver_id":t.ApproverID,"approver_name":approverName,"entries":entries,"total_duration":total},nil
 }

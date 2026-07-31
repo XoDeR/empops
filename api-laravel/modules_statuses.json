@@ -8,5 +8,6 @@
     "Place": true,
     "Notification": true,
     "Time": true,
-    "Finance": true
+    "Finance": true,
+    "Project": true
 }

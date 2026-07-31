@@ -64,4 +64,4 @@ go run ./cmd/api
 
 ## Deferred
 
-Project/task linkage, PTO, expense receipts.
+PTO, expense receipts.

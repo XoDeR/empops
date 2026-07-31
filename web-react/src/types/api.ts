@@ -116,6 +116,10 @@ export type TimesheetEntry = {
   id: string
   timesheet_id: string
   employee_id: string
+  project_id?: string | null
+  project_task_id?: string | null
+  project_name?: string | null
+  project_task_title?: string | null
   duration: number
   happened_at: string
   description: string | null
@@ -313,4 +317,177 @@ export type DashboardShell = {
     is_admin: boolean
     is_accountant?: boolean
   }
+}
+
+export type ProjectStatus =
+  | 'created'
+  | 'started'
+  | 'paused'
+  | 'cancelled'
+  | 'closed'
+
+export type TeamSummary = {
+  id: string
+  name: string
+}
+
+export type ProjectSummary = {
+  id: string
+  name: string
+  code?: string | null
+  short_code?: string | null
+  status: string
+  emoji?: string | null
+}
+
+export type ProjectTaskSummary = {
+  id: string
+  title: string
+  completed: boolean
+  project_task_list_id?: string | null
+}
+
+export type Project = {
+  id: string
+  company_id: string
+  name: string
+  code: string | null
+  short_code: string | null
+  emoji: string | null
+  summary: string | null
+  description: string | null
+  status: ProjectStatus
+  completed: boolean
+  project_lead_id: string | null
+  lead: EmployeeSummary | null
+  started_at: string | null
+  planned_finished_at: string | null
+  actually_finished_at: string | null
+  members: EmployeeSummary[]
+  teams: TeamSummary[]
+  member_count: number
+}
+
+export type ProjectLink = {
+  id: string
+  project_id: string
+  type: string
+  label: string | null
+  url: string
+}
+
+export type ProjectStatusUpdate = {
+  id: string
+  project_id: string
+  author_id: string | null
+  author_name: string | null
+  title: string
+  status: string
+  description: string
+  created_at?: string
+}
+
+export type ProjectFile = {
+  id: number
+  file_name: string
+  mime_type: string | null
+  size: number
+  url: string
+}
+
+export type Comment = {
+  id: string
+  company_id: string
+  author_id: string | null
+  author_name: string
+  content: string
+  created_at?: string
+}
+
+export type ProjectMessage = {
+  id: string
+  project_id: string
+  author_id: string | null
+  author_name: string | null
+  title: string
+  content: string
+  comments?: Comment[]
+  created_at?: string
+}
+
+export type ProjectDecision = {
+  id: string
+  project_id: string
+  author_id: string | null
+  author_name: string | null
+  title: string
+  decided_at: string | null
+  deciders: EmployeeSummary[]
+}
+
+export type ProjectTask = {
+  id: string
+  project_id: string
+  project_task_list_id: string | null
+  author_id: string | null
+  assignee_id: string | null
+  assignee?: EmployeeSummary | null
+  title: string
+  description: string | null
+  completed: boolean
+  completed_at: string | null
+  comments?: Comment[]
+}
+
+export type ProjectTaskList = {
+  id: string
+  project_id: string
+  author_id: string | null
+  title: string
+  description: string | null
+  tasks: ProjectTask[]
+}
+
+export type IssueType = {
+  id: string
+  company_id: string
+  name: string
+  icon: string | null
+}
+
+export type ProjectIssue = {
+  id: string
+  project_id: string
+  project_board_id: string | null
+  reporter_id: string | null
+  issue_type_id: string | null
+  issue_type?: IssueType | null
+  is_separator: boolean
+  id_in_project: number
+  key: string
+  slug: string
+  title: string
+  description: string | null
+  story_points: number | null
+  position?: number | null
+  assignees: EmployeeSummary[]
+}
+
+export type ProjectSprint = {
+  id: string
+  project_id: string
+  project_board_id: string | null
+  name: string
+  active: boolean
+  position?: number | null
+  started_at: string | null
+  completed_at: string | null
+  issues?: ProjectIssue[]
+}
+
+export type ProjectBoard = {
+  id: string
+  project_id: string
+  name: string
+  sprints?: ProjectSprint[]
 }

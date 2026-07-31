@@ -8,6 +8,8 @@ import type {
   DashboardWidget,
   Expense,
   ExpenseCategory,
+  ProjectSummary,
+  ProjectTaskSummary,
   Timesheet,
   Worklog,
 } from '@/types/api'
@@ -167,9 +169,33 @@ function TimesheetWidget({
   const [day, setDay] = useState(todayISO())
   const [hours, setHours] = useState('8')
   const [description, setDescription] = useState('')
+  const [projectId, setProjectId] = useState('')
+  const [projectTaskId, setProjectTaskId] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const editable = data?.status === 'open' || data?.status === 'rejected'
+
+  const projectsQuery = useQuery({
+    queryKey: ['timesheet-projects', companyId],
+    queryFn: async () => {
+      const res = await authFetch<ProjectSummary[]>(
+        `/companies/${companyId}/timesheets/projects`,
+      )
+      return res.data
+    },
+    enabled: Boolean(companyId) && editable,
+  })
+
+  const tasksQuery = useQuery({
+    queryKey: ['timesheet-project-tasks', companyId, projectId],
+    queryFn: async () => {
+      const res = await authFetch<ProjectTaskSummary[]>(
+        `/companies/${companyId}/timesheets/projects/${projectId}/tasks`,
+      )
+      return res.data
+    },
+    enabled: Boolean(companyId && projectId) && editable,
+  })
 
   const upsert = useMutation({
     mutationFn: async () => {
@@ -181,6 +207,8 @@ function TimesheetWidget({
           happened_at: day,
           duration,
           description: description.trim() || null,
+          ...(projectId ? { project_id: projectId } : {}),
+          ...(projectTaskId ? { project_task_id: projectTaskId } : {}),
         }),
       })
     },
@@ -223,6 +251,12 @@ function TimesheetWidget({
         {data.entries.map((entry) => (
           <li key={entry.id}>
             {entry.happened_at}: {(entry.duration / 60).toFixed(1)}h
+            {entry.project_name && (
+              <span className="text-black/55"> · {entry.project_name}</span>
+            )}
+            {entry.project_task_title && (
+              <span className="text-black/55"> / {entry.project_task_title}</span>
+            )}
             {entry.description ? ` — ${entry.description}` : ''}
           </li>
         ))}
@@ -231,7 +265,7 @@ function TimesheetWidget({
         )}
       </ul>
       {editable && (
-        <div className="mt-3 grid gap-2 sm:grid-cols-4">
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           <input
             type="date"
             className="rounded-lg border border-black/15 bg-white px-3 py-2 text-sm"
@@ -250,8 +284,38 @@ function TimesheetWidget({
             onChange={(e) => setHours(e.target.value)}
             placeholder="Hours"
           />
-          <input
+          <select
+            className="rounded-lg border border-black/15 bg-white px-3 py-2 text-sm"
+            value={projectId}
+            onChange={(e) => {
+              setProjectId(e.target.value)
+              setProjectTaskId('')
+            }}
+          >
+            <option value="">No project (ad-hoc)</option>
+            {(projectsQuery.data ?? []).map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.emoji ? `${p.emoji} ` : ''}
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <select
             className="rounded-lg border border-black/15 bg-white px-3 py-2 text-sm sm:col-span-2"
+            value={projectTaskId}
+            disabled={!projectId}
+            onChange={(e) => setProjectTaskId(e.target.value)}
+          >
+            <option value="">No task</option>
+            {(tasksQuery.data ?? []).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.completed ? '✓ ' : ''}
+                {t.title}
+              </option>
+            ))}
+          </select>
+          <input
+            className="rounded-lg border border-black/15 bg-white px-3 py-2 text-sm lg:col-span-3"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)"

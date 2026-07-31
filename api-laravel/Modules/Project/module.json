@@ -1,0 +1,11 @@
+{
+    "name": "Project",
+    "alias": "project",
+    "description": "Projects, boards, tasks, and collaboration",
+    "keywords": [],
+    "priority": 50,
+    "providers": [
+        "Modules\\Project\\Providers\\ProjectServiceProvider"
+    ],
+    "files": []
+}

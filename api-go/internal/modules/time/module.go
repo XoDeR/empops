@@ -33,6 +33,8 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 		sub.Use(httpauth.RequireAuth(m.jwt))
 		sub.Use(companyauth.RequireMember(m.pool))
 		base := "/companies/{companyId}"
+		sub.With(companyauth.RequirePermission("timesheets.view")).Get(base+"/timesheets/projects", m.handler.TimesheetProjects)
+		sub.With(companyauth.RequirePermission("timesheets.view")).Get(base+"/timesheets/projects/{projectId}/tasks", m.handler.TimesheetProjectTasks)
 		sub.With(companyauth.RequirePermission("timesheets.view")).Get(base+"/timesheets", m.handler.Timesheet)
 		sub.With(companyauth.RequirePermission("timesheets.view")).Post(base+"/timesheets", m.handler.Timesheet)
 		sub.With(companyauth.RequirePermission("timesheets.approve")).Get(base+"/timesheets/pending", m.handler.Pending)

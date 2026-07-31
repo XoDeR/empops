@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: EmpOps API
   version: 1.0.0
-  description: EmpOps API (Laravel and Go parity). Step 5 adds timesheets, WFH, expenses, and FX.
+  description: EmpOps API (Laravel and Go parity). Step 6 adds projects, boards, tasks, and timesheet task linkage.
 servers:
   - url: http://localhost:8000/api/v1
     description: Laravel
@@ -960,6 +960,986 @@ paths:
         "200":
           description: Timesheet rejected
 
+  /companies/{companyId}/timesheets/projects:
+    get:
+      summary: Projects available for timesheet time logging
+      operationId: listTimesheetProjects
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Project summaries for the current employee
+
+  /companies/{companyId}/timesheets/projects/{projectId}/tasks:
+    get:
+      summary: Project tasks available for timesheet time logging
+      operationId: listTimesheetProjectTasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Task summaries
+
+  /companies/{companyId}/issue-types:
+    get:
+      summary: List company issue types
+      operationId: listIssueTypes
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Issue types
+
+  /companies/{companyId}/projects:
+    get:
+      summary: List projects
+      operationId: listProjects
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Projects visible to the actor
+    post:
+      summary: Create project
+      operationId: createProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}:
+    get:
+      summary: Get project
+      operationId: getProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Project detail
+    patch:
+      summary: Update project
+      operationId: updateProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete project
+      operationId: deleteProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/members/{employeeId}:
+    post:
+      summary: Add project member
+      operationId: addProjectMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/EmployeeId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  nullable: true
+      responses:
+        "200":
+          description: Member added
+    delete:
+      summary: Remove project member
+      operationId: removeProjectMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Member removed
+
+  /companies/{companyId}/projects/{projectId}/lead:
+    put:
+      summary: Set project lead
+      operationId: setProjectLead
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                employee_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+      responses:
+        "200":
+          description: Lead updated
+
+  /companies/{companyId}/projects/{projectId}/teams/{teamId}:
+    post:
+      summary: Attach team to project
+      operationId: attachProjectTeam
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TeamId"
+      responses:
+        "200":
+          description: Team attached
+    delete:
+      summary: Detach team from project
+      operationId: detachProjectTeam
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TeamId"
+      responses:
+        "200":
+          description: Team detached
+
+  /companies/{companyId}/projects/{projectId}/links:
+    get:
+      summary: List project links
+      operationId: listProjectLinks
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Links
+    post:
+      summary: Create project link
+      operationId: createProjectLink
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectLinkInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/links/{linkId}:
+    patch:
+      summary: Update project link
+      operationId: updateProjectLink
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/LinkId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectLinkInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete project link
+      operationId: deleteProjectLink
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/LinkId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/statuses:
+    get:
+      summary: List project status updates
+      operationId: listProjectStatuses
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Status updates
+    post:
+      summary: Create project status update
+      operationId: createProjectStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectStatusInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/files:
+    get:
+      summary: List project files
+      operationId: listProjectFiles
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Files
+    post:
+      summary: Attach uploaded file to project
+      operationId: attachProjectFile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [temporary_upload_id, media_id]
+              properties:
+                temporary_upload_id:
+                  type: integer
+                media_id:
+                  type: integer
+      responses:
+        "201":
+          description: Attached
+
+  /companies/{companyId}/projects/{projectId}/files/{mediaId}:
+    delete:
+      summary: Delete project file
+      operationId: deleteProjectFile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/messages:
+    get:
+      summary: List project messages
+      operationId: listProjectMessages
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Messages
+    post:
+      summary: Create project message
+      operationId: createProjectMessage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectMessageInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/messages/{messageId}:
+    get:
+      summary: Get project message
+      operationId: getProjectMessage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/MessageId"
+      responses:
+        "200":
+          description: Message
+    patch:
+      summary: Update project message
+      operationId: updateProjectMessage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/MessageId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectMessageInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete project message
+      operationId: deleteProjectMessage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/MessageId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/messages/{messageId}/comments:
+    post:
+      summary: Comment on project message
+      operationId: createProjectMessageComment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/MessageId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/messages/{messageId}/comments/{commentId}:
+    patch:
+      summary: Update message comment
+      operationId: updateProjectMessageComment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/MessageId"
+        - $ref: "#/components/parameters/CommentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete message comment
+      operationId: deleteProjectMessageComment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/MessageId"
+        - $ref: "#/components/parameters/CommentId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/decisions:
+    get:
+      summary: List project decisions
+      operationId: listProjectDecisions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Decisions
+    post:
+      summary: Create project decision
+      operationId: createProjectDecision
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectDecisionInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/decisions/{decisionId}:
+    delete:
+      summary: Delete project decision
+      operationId: deleteProjectDecision
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/DecisionId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/task-lists:
+    get:
+      summary: List project task lists
+      operationId: listProjectTaskLists
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Task lists with tasks
+    post:
+      summary: Create task list
+      operationId: createProjectTaskList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectTaskListInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/task-lists/{listId}:
+    patch:
+      summary: Update task list
+      operationId: updateProjectTaskList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskListId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectTaskListInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete task list
+      operationId: deleteProjectTaskList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskListId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/tasks:
+    post:
+      summary: Create project task
+      operationId: createProjectTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectTaskInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/tasks/{taskId}:
+    get:
+      summary: Get project task
+      operationId: getProjectTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "200":
+          description: Task
+    patch:
+      summary: Update project task
+      operationId: updateProjectTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectTaskInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete project task
+      operationId: deleteProjectTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/tasks/{taskId}/toggle:
+    post:
+      summary: Toggle project task completion
+      operationId: toggleProjectTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "200":
+          description: Toggled
+
+  /companies/{companyId}/projects/{projectId}/tasks/{taskId}/time-entries:
+    get:
+      summary: Time entries logged against a task
+      operationId: listProjectTaskTimeEntries
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "200":
+          description: Time entries
+
+  /companies/{companyId}/projects/{projectId}/tasks/{taskId}/comments:
+    post:
+      summary: Comment on project task
+      operationId: createProjectTaskComment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/tasks/{taskId}/comments/{commentId}:
+    patch:
+      summary: Update task comment
+      operationId: updateProjectTaskComment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskId"
+        - $ref: "#/components/parameters/CommentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete task comment
+      operationId: deleteProjectTaskComment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/TaskId"
+        - $ref: "#/components/parameters/CommentId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/boards:
+    get:
+      summary: List project boards
+      operationId: listProjectBoards
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Boards
+    post:
+      summary: Create project board
+      operationId: createProjectBoard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}:
+    get:
+      summary: Get board with sprints and issues
+      operationId: getProjectBoard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+      responses:
+        "200":
+          description: Board
+    patch:
+      summary: Update board
+      operationId: updateProjectBoard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete board
+      operationId: deleteProjectBoard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}/backlog:
+    get:
+      summary: Board backlog (inactive sprint / unassigned issues)
+      operationId: getProjectBoardBacklog
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+      responses:
+        "200":
+          description: Backlog sprint with issues
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}/sprints/{sprintId}/start:
+    post:
+      summary: Start a sprint
+      operationId: startProjectSprint
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+        - $ref: "#/components/parameters/SprintId"
+      responses:
+        "200":
+          description: Sprint started
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}/sprints/{sprintId}/toggle:
+    post:
+      summary: Complete or reopen a sprint
+      operationId: toggleProjectSprint
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+        - $ref: "#/components/parameters/SprintId"
+      responses:
+        "200":
+          description: Sprint toggled
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}/sprints/{sprintId}/issues:
+    post:
+      summary: Create issue on sprint
+      operationId: createProjectIssue
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+        - $ref: "#/components/parameters/SprintId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectIssueInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}/sprints/{sprintId}/issues/{issueId}/order:
+    post:
+      summary: Reorder issue within sprint
+      operationId: reorderProjectIssue
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+        - $ref: "#/components/parameters/SprintId"
+        - $ref: "#/components/parameters/IssueId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [position]
+              properties:
+                position:
+                  type: integer
+                  minimum: 0
+      responses:
+        "200":
+          description: Reordered
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}/sprints/{sprintId}/issues/{issueId}:
+    delete:
+      summary: Delete issue from sprint
+      operationId: deleteProjectIssue
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+        - $ref: "#/components/parameters/SprintId"
+        - $ref: "#/components/parameters/IssueId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}/issues/{issueId}/assignees:
+    post:
+      summary: Assign employee to issue
+      operationId: addProjectIssueAssignee
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+        - $ref: "#/components/parameters/IssueId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employee_id]
+              properties:
+                employee_id:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Assigned
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}/issues/{issueId}/assignees/{assigneeId}:
+    delete:
+      summary: Unassign employee from issue
+      operationId: removeProjectIssueAssignee
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+        - $ref: "#/components/parameters/IssueId"
+        - name: assigneeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Unassigned
+
+  /companies/{companyId}/projects/{projectId}/boards/{boardId}/issues/{issueId}/points:
+    post:
+      summary: Set issue story points
+      operationId: setProjectIssuePoints
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/BoardId"
+        - $ref: "#/components/parameters/IssueId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [story_points]
+              properties:
+                story_points:
+                  type: integer
+                  minimum: 0
+                  nullable: true
+      responses:
+        "200":
+          description: Points updated
+
   /companies/{companyId}/employees/{employeeId}/work-from-home:
     put:
       summary: Set work-from-home for a date (presence/absence)
@@ -1404,6 +2384,76 @@ components:
         format: uuid
     CategoryId:
       name: categoryId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    LinkId:
+      name: linkId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    MessageId:
+      name: messageId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CommentId:
+      name: commentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DecisionId:
+      name: decisionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TaskListId:
+      name: listId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    BoardId:
+      name: boardId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SprintId:
+      name: sprintId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IssueId:
+      name: issueId
       in: path
       required: true
       schema:
@@ -1950,6 +3000,20 @@ components:
         employee_id:
           type: string
           format: uuid
+        project_id:
+          type: string
+          format: uuid
+          nullable: true
+        project_task_id:
+          type: string
+          format: uuid
+          nullable: true
+        project_name:
+          type: string
+          nullable: true
+        project_task_title:
+          type: string
+          nullable: true
         duration:
           type: integer
           description: Minutes
@@ -1973,6 +3037,582 @@ components:
           maximum: 1440
         description:
           type: string
+          nullable: true
+        project_id:
+          type: string
+          format: uuid
+          nullable: true
+        project_task_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    ProjectSummary:
+      type: object
+      required: [id, name, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+          nullable: true
+        short_code:
+          type: string
+          nullable: true
+        status:
+          type: string
+        emoji:
+          type: string
+          nullable: true
+
+    ProjectTaskSummary:
+      type: object
+      required: [id, title, completed]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        completed:
+          type: boolean
+        project_task_list_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    Project:
+      type: object
+      required: [id, company_id, name, status, completed, members]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+          nullable: true
+        short_code:
+          type: string
+          nullable: true
+        emoji:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [created, started, paused, cancelled, closed]
+        completed:
+          type: boolean
+        project_lead_id:
+          type: string
+          format: uuid
+          nullable: true
+        lead:
+          $ref: "#/components/schemas/EmployeeSummary"
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        planned_finished_at:
+          type: string
+          format: date-time
+          nullable: true
+        actually_finished_at:
+          type: string
+          format: date-time
+          nullable: true
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployeeSummary"
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamSummary"
+        member_count:
+          type: integer
+
+    TeamSummary:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    ProjectInput:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+          nullable: true
+        short_code:
+          type: string
+          nullable: true
+        emoji:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [created, started, paused, cancelled, closed]
+        project_lead_id:
+          type: string
+          format: uuid
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        planned_finished_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ProjectLink:
+      type: object
+      required: [id, project_id, type, url]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        label:
+          type: string
+          nullable: true
+        url:
+          type: string
+
+    ProjectLinkInput:
+      type: object
+      required: [type, url]
+      properties:
+        type:
+          type: string
+        label:
+          type: string
+          nullable: true
+        url:
+          type: string
+
+    ProjectStatusUpdate:
+      type: object
+      required: [id, project_id, title, status, description]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+          nullable: true
+        author_name:
+          type: string
+          nullable: true
+        title:
+          type: string
+        status:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ProjectStatusInput:
+      type: object
+      required: [title, status, description]
+      properties:
+        title:
+          type: string
+        status:
+          type: string
+        description:
+          type: string
+
+    ProjectFile:
+      type: object
+      required: [id, file_name, size, url]
+      properties:
+        id:
+          type: integer
+        file_name:
+          type: string
+        mime_type:
+          type: string
+          nullable: true
+        size:
+          type: integer
+        url:
+          type: string
+
+    Comment:
+      type: object
+      required: [id, company_id, author_name, content]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+          nullable: true
+        author_name:
+          type: string
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CommentInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+
+    ProjectMessage:
+      type: object
+      required: [id, project_id, title, content]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+          nullable: true
+        author_name:
+          type: string
+          nullable: true
+        title:
+          type: string
+        content:
+          type: string
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        created_at:
+          type: string
+          format: date-time
+
+    ProjectMessageInput:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+
+    ProjectDecision:
+      type: object
+      required: [id, project_id, title, deciders]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+          nullable: true
+        author_name:
+          type: string
+          nullable: true
+        title:
+          type: string
+        decided_at:
+          type: string
+          format: date
+          nullable: true
+        deciders:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployeeSummary"
+
+    ProjectDecisionInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        decided_at:
+          type: string
+          format: date
+          nullable: true
+        decider_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    ProjectTaskList:
+      type: object
+      required: [id, project_id, title, tasks]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectTask"
+
+    ProjectTaskListInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+
+    ProjectTask:
+      type: object
+      required: [id, project_id, title, completed]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        project_task_list_id:
+          type: string
+          format: uuid
+          nullable: true
+        author_id:
+          type: string
+          format: uuid
+          nullable: true
+        assignee_id:
+          type: string
+          format: uuid
+          nullable: true
+        assignee:
+          $ref: "#/components/schemas/EmployeeSummary"
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+
+    ProjectTaskInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        project_task_list_id:
+          type: string
+          format: uuid
+          nullable: true
+        assignee_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    IssueType:
+      type: object
+      required: [id, company_id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        icon:
+          type: string
+          nullable: true
+
+    ProjectBoard:
+      type: object
+      required: [id, project_id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sprints:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectSprint"
+
+    ProjectSprint:
+      type: object
+      required: [id, project_id, name, active]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        project_board_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+        active:
+          type: boolean
+        position:
+          type: integer
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectIssue"
+
+    ProjectIssue:
+      type: object
+      required: [id, project_id, key, title, id_in_project]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        project_board_id:
+          type: string
+          format: uuid
+          nullable: true
+        reporter_id:
+          type: string
+          format: uuid
+          nullable: true
+        issue_type_id:
+          type: string
+          format: uuid
+          nullable: true
+        issue_type:
+          $ref: "#/components/schemas/IssueType"
+          nullable: true
+        is_separator:
+          type: boolean
+        id_in_project:
+          type: integer
+        key:
+          type: string
+        slug:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        story_points:
+          type: integer
+          nullable: true
+        position:
+          type: integer
+          nullable: true
+        assignees:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmployeeSummary"
+
+    ProjectIssueInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        issue_type_id:
+          type: string
+          format: uuid
+          nullable: true
+        is_separator:
+          type: boolean
+        story_points:
+          type: integer
           nullable: true
 
     ExpenseCategory:

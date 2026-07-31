@@ -7,6 +7,8 @@ import EmployeeDetailPage from '@/pages/EmployeeDetailPage'
 import AdminlandPage from '@/pages/AdminlandPage'
 import TeamsPage from '@/pages/TeamsPage'
 import TeamDetailPage from '@/pages/TeamDetailPage'
+import ProjectsPage from '@/pages/ProjectsPage'
+import ProjectDetailPage from '@/pages/ProjectDetailPage'
 import DashboardPage from '@/pages/DashboardPage'
 import ProtectedRoute from '@/routes/ProtectedRoute'
 import AppLayout from '@/routes/AppLayout'
@@ -28,6 +30,8 @@ export default function App() {
             <Route path="employees/:employeeId" element={<EmployeeDetailPage />} />
             <Route path="teams" element={<TeamsPage />} />
             <Route path="teams/:teamId" element={<TeamDetailPage />} />
+            <Route path="projects" element={<ProjectsPage />} />
+            <Route path="projects/:projectId" element={<ProjectDetailPage />} />
             <Route path="adminland" element={<AdminlandPage />} />
           </Route>
         </Route>

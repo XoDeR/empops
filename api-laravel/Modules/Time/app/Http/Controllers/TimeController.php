@@ -8,13 +8,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Company\Models\Company;
 use Modules\Employee\Models\Employee;
+use Modules\Project\Services\ProjectService;
 use Modules\Time\Models\Timesheet;
 use Modules\Time\Services\TimeService;
 use RuntimeException;
 
 class TimeController extends Controller
 {
-    public function __construct(private readonly TimeService $time) {}
+    public function __construct(
+        private readonly TimeService $time,
+        private readonly ProjectService $projects,
+    ) {}
 
     public function timesheet(Request $request): JsonResponse
     {
@@ -58,6 +62,39 @@ class TimeController extends Controller
         );
     }
 
+    public function timesheetProjects(Request $request): JsonResponse
+    {
+        /** @var Company $company */
+        $company = $request->attributes->get('company');
+        /** @var Employee $actor */
+        $actor = $request->attributes->get('employee');
+
+        return ApiResponse::success(
+            $this->time->listProjectsForTimesheet($company, $actor)
+                ->map(fn ($project) => $this->projects->projectSummaryPayload($project))
+                ->values()
+                ->all(),
+        );
+    }
+
+    public function timesheetProjectTasks(Request $request, string $companyId, string $projectId): JsonResponse
+    {
+        /** @var Company $company */
+        $company = $request->attributes->get('company');
+        /** @var Employee $actor */
+        $actor = $request->attributes->get('employee');
+
+        try {
+            $tasks = $this->time->listTasksForTimesheet($company, $actor, $projectId);
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), $e->getCode() ?: 400);
+        }
+
+        return ApiResponse::success(
+            $tasks->map(fn ($task) => $this->projects->taskSummaryPayload($task))->values()->all(),
+        );
+    }
+
     public function show(Request $request, string $companyId, string $timesheetId): JsonResponse
     {
         /** @var Company $company */
@@ -83,6 +120,8 @@ class TimeController extends Controller
             'happened_at' => ['required', 'date'],
             'duration' => ['required', 'integer', 'min:1', 'max:1440'],
             'description' => ['nullable', 'string'],
+            'project_id' => ['nullable', 'uuid'],
+            'project_task_id' => ['nullable', 'uuid'],
         ]);
 
         try {

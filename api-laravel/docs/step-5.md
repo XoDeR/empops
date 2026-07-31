@@ -58,4 +58,4 @@ php artisan serve --port=8000
 
 ## Deferred
 
-Project/task linkage on timesheet entries, PTO, expense receipts.
+PTO, expense receipts.

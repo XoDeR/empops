@@ -14,6 +14,7 @@ final class MediaAttachService
         string $collection,
         int $temporaryUploadId,
         int $mediaId,
+        bool $clearExisting = true,
     ): Media {
         $temp = TemporaryUpload::query()->find($temporaryUploadId);
         if ($temp === null) {
@@ -25,7 +26,9 @@ final class MediaAttachService
             throw new RuntimeException('Media not found on temporary upload', 404);
         }
 
-        $target->clearMediaCollection($collection);
+        if ($clearExisting) {
+            $target->clearMediaCollection($collection);
+        }
 
         return $media->move($target, $collection);
     }

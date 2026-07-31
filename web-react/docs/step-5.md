@@ -31,4 +31,4 @@ npm run dev
 
 ## Deferred
 
-Project/task time entry fields, PTO UI, receipt uploads.
+PTO UI, receipt uploads.

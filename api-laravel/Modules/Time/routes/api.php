@@ -15,6 +15,10 @@ Route::prefix('v1/companies/{companyId}')
             ->middleware(EnsurePermission::class.':timesheets.view');
         Route::get('timesheets/pending', [TimeController::class, 'pending'])
             ->middleware(EnsurePermission::class.':timesheets.approve');
+        Route::get('timesheets/projects', [TimeController::class, 'timesheetProjects'])
+            ->middleware(EnsurePermission::class.':timesheets.view');
+        Route::get('timesheets/projects/{projectId}/tasks', [TimeController::class, 'timesheetProjectTasks'])
+            ->middleware(EnsurePermission::class.':timesheets.view');
         Route::get('timesheets/{timesheetId}', [TimeController::class, 'show'])
             ->middleware(EnsurePermission::class.':timesheets.view');
         Route::post('timesheets/{timesheetId}/entries', [TimeController::class, 'upsertEntry'])
