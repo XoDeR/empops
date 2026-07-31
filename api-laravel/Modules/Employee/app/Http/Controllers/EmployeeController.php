@@ -127,6 +127,29 @@ class EmployeeController extends Controller
         );
     }
 
+    public function import(Request $request): JsonResponse
+    {
+        /** @var Company $company */
+        $company = $request->attributes->get('company');
+
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
+        ]);
+
+        $file = $request->file('file');
+        if ($file === null) {
+            return ApiResponse::error('File required', 422);
+        }
+
+        try {
+            $result = $this->employees->importFromCsv($company, $file->getRealPath());
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), $e->getCode() ?: 400);
+        }
+
+        return ApiResponse::success($result, 'Import finished');
+    }
+
     private function findInCompany(Request $request, string $employeeId): Employee
     {
         /** @var Company $company */

@@ -101,6 +101,80 @@ final class EmployeeService
     }
 
     /**
+     * @return array{created: int, errors: list<array{row: int, message: string}>}
+     */
+    public function importFromCsv(Company $company, string $path): array
+    {
+        $handle = fopen($path, 'r');
+        if ($handle === false) {
+            throw new RuntimeException('Unable to read CSV file', 400);
+        }
+
+        $header = fgetcsv($handle);
+        if ($header === false) {
+            fclose($handle);
+            throw new RuntimeException('CSV file is empty', 400);
+        }
+
+        $header = array_map(fn ($h) => strtolower(trim((string) $h)), $header);
+        $required = ['email', 'first_name', 'last_name'];
+        foreach ($required as $col) {
+            if (! in_array($col, $header, true)) {
+                fclose($handle);
+                throw new RuntimeException("CSV missing required column: {$col}", 422);
+            }
+        }
+
+        $created = 0;
+        $errors = [];
+        $rowNum = 1;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowNum++;
+            if (count($row) === 1 && trim((string) $row[0]) === '') {
+                continue;
+            }
+
+            $data = [];
+            foreach ($header as $i => $key) {
+                $data[$key] = isset($row[$i]) ? trim((string) $row[$i]) : '';
+            }
+
+            if ($data['email'] === '' || $data['first_name'] === '' || $data['last_name'] === '') {
+                $errors[] = ['row' => $rowNum, 'message' => 'email, first_name, and last_name are required'];
+                continue;
+            }
+
+            if (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $errors[] = ['row' => $rowNum, 'message' => 'invalid email'];
+                continue;
+            }
+
+            if (Employee::query()->where('company_id', $company->id)->where('email', $data['email'])->exists()) {
+                $errors[] = ['row' => $rowNum, 'message' => 'email already exists'];
+                continue;
+            }
+
+            try {
+                $this->create($company, [
+                    'email' => $data['email'],
+                    'first_name' => $data['first_name'],
+                    'last_name' => $data['last_name'],
+                    'hired_at' => $data['hired_at'] !== '' ? $data['hired_at'] : null,
+                    'position_id' => $data['position_id'] !== '' ? $data['position_id'] : null,
+                ], 'employee');
+                $created++;
+            } catch (\Throwable $e) {
+                $errors[] = ['row' => $rowNum, 'message' => $e->getMessage()];
+            }
+        }
+
+        fclose($handle);
+
+        return ['created' => $created, 'errors' => $errors];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function employeePayload(Employee $employee, bool $includeInvite = false): array

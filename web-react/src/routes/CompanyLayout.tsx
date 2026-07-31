@@ -91,9 +91,14 @@ export default function CompanyLayout() {
           Projects
         </NavLink>
         {isHrOrAdmin && (
-          <NavLink to={`/companies/${companyId}/adminland`} className={tabClass}>
-            Adminland
-          </NavLink>
+          <>
+            <NavLink to={`/companies/${companyId}/recruiting`} className={tabClass}>
+              Recruiting
+            </NavLink>
+            <NavLink to={`/companies/${companyId}/adminland`} className={tabClass}>
+              Adminland
+            </NavLink>
+          </>
         )}
       </nav>
 

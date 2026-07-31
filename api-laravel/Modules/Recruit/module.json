@@ -1,0 +1,11 @@
+{
+    "name": "Recruit",
+    "alias": "recruit",
+    "description": "Job openings, candidates, and recruiting pipeline",
+    "keywords": [],
+    "priority": 55,
+    "providers": [
+        "Modules\\Recruit\\Providers\\RecruitServiceProvider"
+    ],
+    "files": []
+}

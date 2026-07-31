@@ -1,0 +1,17 @@
+{
+    "name": "nwidart/recruit",
+    "description": "",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Recruit\\": "app/",
+            "Modules\\Recruit\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}

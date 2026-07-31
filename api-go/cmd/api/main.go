@@ -34,6 +34,7 @@ import (
 	_ "github.com/XoDeR/empops/api-go/internal/modules/notification"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/place"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/project"
+	_ "github.com/XoDeR/empops/api-go/internal/modules/recruit"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/team"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/time"
 

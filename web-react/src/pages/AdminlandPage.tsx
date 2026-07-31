@@ -13,7 +13,16 @@ import {
   ExpenseCategoriesSection,
   WorkFromHomeAdminSection,
 } from '@/components/OperateAdminSections'
-import type { EmployeeStatus, EmployeeStatusType, Position } from '@/types/api'
+import { API_BASE } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth'
+import type {
+  EmployeeImportResult,
+  EmployeeStatus,
+  EmployeeStatusType,
+  Position,
+  RecruitingStage,
+  RecruitingStageTemplate,
+} from '@/types/api'
 
 const settingsSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -469,6 +478,238 @@ function EditableStatusRow({
   )
 }
 
+function RecruitingTemplatesSection({ companyId }: { companyId: string }) {
+  const queryClient = useQueryClient()
+  const [newTemplateName, setNewTemplateName] = useState('')
+  const [stageNames, setStageNames] = useState<Record<string, string>>({})
+
+  const templatesQuery = useQuery({
+    queryKey: ['recruiting-templates', companyId],
+    queryFn: async () => {
+      const res = await authFetch<RecruitingStageTemplate[]>(
+        `/companies/${companyId}/recruiting/stage-templates`,
+      )
+      return res.data
+    },
+  })
+
+  const createTemplate = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await authFetch<RecruitingStageTemplate>(
+        `/companies/${companyId}/recruiting/stage-templates`,
+        { method: 'POST', body: JSON.stringify({ name }) },
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      setNewTemplateName('')
+      void queryClient.invalidateQueries({ queryKey: ['recruiting-templates', companyId] })
+    },
+  })
+
+  const deleteTemplate = useMutation({
+    mutationFn: async (templateId: string) => {
+      await authFetch(`/companies/${companyId}/recruiting/stage-templates/${templateId}`, {
+        method: 'DELETE',
+      })
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['recruiting-templates', companyId] })
+    },
+  })
+
+  const addStage = useMutation({
+    mutationFn: async ({ templateId, name }: { templateId: string; name: string }) => {
+      const res = await authFetch<RecruitingStage>(
+        `/companies/${companyId}/recruiting/stage-templates/${templateId}/stages`,
+        { method: 'POST', body: JSON.stringify({ name }) },
+      )
+      return res.data
+    },
+    onSuccess: (_, { templateId }) => {
+      setStageNames((prev) => ({ ...prev, [templateId]: '' }))
+      void queryClient.invalidateQueries({ queryKey: ['recruiting-templates', companyId] })
+    },
+  })
+
+  const deleteStage = useMutation({
+    mutationFn: async ({ templateId, stageId }: { templateId: string; stageId: string }) => {
+      await authFetch(
+        `/companies/${companyId}/recruiting/stage-templates/${templateId}/stages/${stageId}`,
+        { method: 'DELETE' },
+      )
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['recruiting-templates', companyId] })
+    },
+  })
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-black/10 bg-white/80 p-5 shadow-sm">
+      <h2 className="text-lg font-semibold">Recruiting stage templates</h2>
+      {templatesQuery.isLoading && <p className="text-sm text-black/60">Loading…</p>}
+      <ul className="space-y-4">
+        {templatesQuery.data?.map((template) => (
+          <li key={template.id} className="rounded-lg bg-black/[0.03] p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-medium">{template.name}</span>
+              <button
+                type="button"
+                onClick={() => deleteTemplate.mutate(template.id)}
+                disabled={deleteTemplate.isPending}
+                className="rounded-lg border border-black/15 px-2 py-1 text-xs text-red-700 hover:bg-white disabled:opacity-60"
+              >
+                Delete template
+              </button>
+            </div>
+            <ul className="mt-2 space-y-1 pl-2">
+              {template.stages.map((stage) => (
+                <li key={stage.id} className="flex items-center justify-between gap-2 text-sm">
+                  <span>
+                    {stage.position + 1}. {stage.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      deleteStage.mutate({ templateId: template.id, stageId: stage.id })
+                    }
+                    disabled={deleteStage.isPending}
+                    className="rounded border border-black/15 px-1.5 py-0.5 text-xs text-red-700 hover:bg-white disabled:opacity-60"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <form
+              className="mt-2 flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault()
+                const name = (stageNames[template.id] ?? '').trim()
+                if (name) addStage.mutate({ templateId: template.id, name })
+              }}
+            >
+              <input
+                className="flex-1 rounded-lg border border-black/15 bg-white px-2 py-1 text-sm outline-none focus:border-[var(--empops-accent)]"
+                placeholder="New stage name"
+                value={stageNames[template.id] ?? ''}
+                onChange={(e) =>
+                  setStageNames((prev) => ({ ...prev, [template.id]: e.target.value }))
+                }
+              />
+              <button
+                type="submit"
+                disabled={addStage.isPending}
+                className="rounded-lg border border-black/15 px-2 py-1 text-xs hover:bg-white disabled:opacity-60"
+              >
+                Add stage
+              </button>
+            </form>
+          </li>
+        ))}
+      </ul>
+      <form
+        className="flex flex-wrap items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault()
+          const name = newTemplateName.trim()
+          if (name) createTemplate.mutate(name)
+        }}
+      >
+        <label className="block flex-1 space-y-1">
+          <span className="text-xs text-black/60">New template name</span>
+          <input
+            className="w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--empops-accent)]"
+            value={newTemplateName}
+            onChange={(e) => setNewTemplateName(e.target.value)}
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={createTemplate.isPending}
+          className="rounded-lg border border-black/15 px-3 py-2 text-sm hover:bg-black/[0.03] disabled:opacity-60"
+        >
+          Add template
+        </button>
+      </form>
+    </section>
+  )
+}
+
+function EmployeeCsvImportSection({ companyId }: { companyId: string }) {
+  const [result, setResult] = useState<EmployeeImportResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const handleImport = async (file: File) => {
+    setError(null)
+    setResult(null)
+    setBusy(true)
+    try {
+      const token = useAuthStore.getState().accessToken
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch(`${API_BASE}/companies/${companyId}/employees/import`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      })
+      const body = (await res.json()) as {
+        success: boolean
+        message: string
+        data: EmployeeImportResult
+      }
+      if (!res.ok || !body.success) {
+        throw new Error(body.message || `Import failed (${res.status})`)
+      }
+      setResult(body.data)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Import failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-black/10 bg-white/80 p-5 shadow-sm">
+      <h2 className="text-lg font-semibold">Employee CSV import</h2>
+      <p className="text-sm text-black/60">
+        Upload a CSV file to bulk-create employees.
+      </p>
+      <input
+        type="file"
+        accept=".csv,text/csv"
+        disabled={busy}
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) void handleImport(file)
+          e.target.value = ''
+        }}
+        className="text-sm"
+      />
+      {busy && <p className="text-sm text-black/60">Importing…</p>}
+      {error && <p className="text-sm text-red-700">{error}</p>}
+      {result && (
+        <div className="rounded-lg bg-black/[0.03] p-3 text-sm">
+          <p className="font-medium">Created {result.created} employees</p>
+          {result.errors.length > 0 && (
+            <ul className="mt-2 space-y-1 text-red-700">
+              {result.errors.map((err, i) => (
+                <li key={i}>
+                  Row {err.row}: {err.message}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
 export default function AdminlandPage() {
   const { companyId } = useParams<{ companyId: string }>()
   const { isAdmin, isHrOrAdmin } = useCompanyContext()
@@ -494,6 +735,8 @@ export default function AdminlandPage() {
       <AccountantsSection companyId={companyId} />
       <PositionsSection companyId={companyId} />
       <EmployeeStatusesSection companyId={companyId} />
+      <RecruitingTemplatesSection companyId={companyId} />
+      <EmployeeCsvImportSection companyId={companyId} />
     </div>
   )
 }

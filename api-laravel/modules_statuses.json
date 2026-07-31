@@ -9,5 +9,6 @@
     "Notification": true,
     "Time": true,
     "Finance": true,
-    "Project": true
+    "Project": true,
+    "Recruit": true
 }

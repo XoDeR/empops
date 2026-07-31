@@ -17,6 +17,8 @@ Route::prefix('v1/companies/{companyId}')
             ->middleware(EnsurePermission::class.':employees.view');
         Route::post('employees', [EmployeeController::class, 'store'])
             ->middleware(EnsurePermission::class.':employees.create');
+        Route::post('employees/import', [EmployeeController::class, 'import'])
+            ->middleware(EnsurePermission::class.':employees.create');
         Route::get('employees/{employeeId}', [EmployeeController::class, 'show'])
             ->middleware(EnsurePermission::class.':employees.view');
         Route::patch('employees/{employeeId}', [EmployeeController::class, 'update']);

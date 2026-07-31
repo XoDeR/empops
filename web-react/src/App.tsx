@@ -9,6 +9,11 @@ import TeamsPage from '@/pages/TeamsPage'
 import TeamDetailPage from '@/pages/TeamDetailPage'
 import ProjectsPage from '@/pages/ProjectsPage'
 import ProjectDetailPage from '@/pages/ProjectDetailPage'
+import RecruitingPage from '@/pages/RecruitingPage'
+import JobOpeningDetailPage from '@/pages/JobOpeningDetailPage'
+import JobsPage from '@/pages/public/JobsPage'
+import CompanyJobsPage from '@/pages/public/CompanyJobsPage'
+import JobApplyPage from '@/pages/public/JobApplyPage'
 import DashboardPage from '@/pages/DashboardPage'
 import ProtectedRoute from '@/routes/ProtectedRoute'
 import AppLayout from '@/routes/AppLayout'
@@ -19,6 +24,10 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+
+      <Route path="/jobs" element={<JobsPage />} />
+      <Route path="/jobs/:companySlug" element={<CompanyJobsPage />} />
+      <Route path="/jobs/:companySlug/jobs/:jobSlug" element={<JobApplyPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
@@ -32,6 +41,8 @@ export default function App() {
             <Route path="teams/:teamId" element={<TeamDetailPage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="projects/:projectId" element={<ProjectDetailPage />} />
+            <Route path="recruiting" element={<RecruitingPage />} />
+            <Route path="recruiting/:jobOpeningId" element={<JobOpeningDetailPage />} />
             <Route path="adminland" element={<AdminlandPage />} />
           </Route>
         </Route>

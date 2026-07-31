@@ -56,6 +56,7 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 
 		sub.With(companyauth.RequirePermission("employees.view")).Get("/companies/{companyId}/employees", m.handler.ListEmployees)
 		sub.With(companyauth.RequirePermission("employees.create")).Post("/companies/{companyId}/employees", m.handler.CreateEmployee)
+		sub.With(companyauth.RequirePermission("employees.create")).Post("/companies/{companyId}/employees/import", m.handler.ImportEmployees)
 		sub.With(companyauth.RequirePermission("employees.view")).Get("/companies/{companyId}/employees/{employeeId}", m.handler.ShowEmployee)
 		sub.Patch("/companies/{companyId}/employees/{employeeId}", m.handler.UpdateEmployee)
 		sub.With(companyauth.RequirePermission("employees.delete")).Delete("/companies/{companyId}/employees/{employeeId}", m.handler.DeleteEmployee)

@@ -66,6 +66,12 @@ class RolePermissionSeeder extends Seeder
             'projects.update',
             'projects.delete',
             'projects.manage_members',
+            'recruiting.view',
+            'recruiting.create',
+            'recruiting.update',
+            'recruiting.delete',
+            'recruiting.hire',
+            'recruiting.manage_templates',
         ];
 
         foreach ($permissions as $name) {
@@ -135,6 +141,12 @@ class RolePermissionSeeder extends Seeder
             'projects.update',
             'projects.delete',
             'projects.manage_members',
+            'recruiting.view',
+            'recruiting.create',
+            'recruiting.update',
+            'recruiting.delete',
+            'recruiting.hire',
+            'recruiting.manage_templates',
         ]);
 
         $accountant->syncPermissions([

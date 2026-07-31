@@ -1110,6 +1110,7 @@ final class ProjectService
 
     private function ensureCommentManage(Comment $comment, Employee $actor): void
     {
+        $comment->loadMissing('commentable');
         $commentable = $comment->commentable;
         if ($commentable instanceof ProjectMessage) {
             $this->ensureManage($actor, $commentable->project);

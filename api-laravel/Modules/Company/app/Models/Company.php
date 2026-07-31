@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Employee\Models\Employee;
 use Modules\Employee\Models\EmployeeStatus;
 use Modules\Employee\Models\Position;
+use Modules\Recruit\Models\JobOpening;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -44,6 +45,18 @@ class Company extends Model implements HasMedia
     public function employeeStatuses(): HasMany
     {
         return $this->hasMany(EmployeeStatus::class);
+    }
+
+    public function jobOpenings(): HasMany
+    {
+        return $this->hasMany(JobOpening::class);
+    }
+
+    public function jobOpeningsPublic(): HasMany
+    {
+        return $this->hasMany(JobOpening::class)
+            ->where('active', true)
+            ->where('fulfilled', false);
     }
 
     public function registerMediaCollections(): void

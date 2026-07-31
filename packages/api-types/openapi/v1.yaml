@@ -2304,6 +2304,651 @@ paths:
                       data:
                         $ref: "#/components/schemas/AuditLogPage"
 
+  /companies/{companyId}/recruiting/stage-templates:
+    get:
+      summary: List recruiting stage templates
+      operationId: listRecruitingStageTemplates
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Templates
+    post:
+      summary: Create recruiting stage template
+      operationId: createRecruitingStageTemplate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/recruiting/stage-templates/{templateId}:
+    get:
+      summary: Get recruiting stage template
+      operationId: getRecruitingStageTemplate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TemplateId"
+      responses:
+        "200":
+          description: Template with stages
+    patch:
+      summary: Update recruiting stage template
+      operationId: updateRecruitingStageTemplate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TemplateId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete recruiting stage template
+      operationId: deleteRecruitingStageTemplate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TemplateId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/recruiting/stage-templates/{templateId}/stages:
+    post:
+      summary: Add stage to template
+      operationId: createRecruitingStage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TemplateId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/recruiting/stage-templates/{templateId}/stages/{stageId}:
+    patch:
+      summary: Update template stage
+      operationId: updateRecruitingStage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TemplateId"
+        - $ref: "#/components/parameters/RecruitingStageId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                position:
+                  type: integer
+                  minimum: 0
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete template stage
+      operationId: deleteRecruitingStage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/TemplateId"
+        - $ref: "#/components/parameters/RecruitingStageId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/job-openings:
+    get:
+      summary: List job openings
+      operationId: listJobOpenings
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: fulfilled
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Job openings
+    post:
+      summary: Create job opening
+      operationId: createJobOpening
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobOpeningInput"
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/job-openings/{jobOpeningId}:
+    get:
+      summary: Get job opening
+      operationId: getJobOpening
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+      responses:
+        "200":
+          description: Job opening detail
+    patch:
+      summary: Update job opening
+      operationId: updateJobOpening
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobOpeningInput"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete job opening
+      operationId: deleteJobOpening
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/toggle:
+    post:
+      summary: Toggle job opening active
+      operationId: toggleJobOpening
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+      responses:
+        "200":
+          description: Toggled
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/sponsors/{employeeId}:
+    post:
+      summary: Add sponsor to job opening
+      operationId: addJobOpeningSponsor
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Added
+    delete:
+      summary: Remove sponsor from job opening
+      operationId: removeJobOpeningSponsor
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Removed
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates:
+    get:
+      summary: List candidates for opening (bucketed)
+      operationId: listJobOpeningCandidates
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - name: bucket
+          in: query
+          schema:
+            type: string
+            enum: [to_sort, selected, rejected]
+      responses:
+        "200":
+          description: Candidates
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates/{candidateId}:
+    get:
+      summary: Get candidate detail
+      operationId: getCandidate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+      responses:
+        "200":
+          description: Candidate with stages
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates/{candidateId}/stages/{stageId}:
+    post:
+      summary: Process candidate stage (pass/fail)
+      operationId: processCandidateStage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+        - $ref: "#/components/parameters/CandidateStageId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accepted]
+              properties:
+                accepted:
+                  type: boolean
+      responses:
+        "200":
+          description: Stage processed
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates/{candidateId}/stages/{stageId}/notes:
+    get:
+      summary: List stage notes
+      operationId: listCandidateStageNotes
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+        - $ref: "#/components/parameters/CandidateStageId"
+      responses:
+        "200":
+          description: Notes
+    post:
+      summary: Add stage note
+      operationId: createCandidateStageNote
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+        - $ref: "#/components/parameters/CandidateStageId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note]
+              properties:
+                note:
+                  type: string
+      responses:
+        "201":
+          description: Created
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates/{candidateId}/stages/{stageId}/notes/{noteId}:
+    patch:
+      summary: Update stage note
+      operationId: updateCandidateStageNote
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+        - $ref: "#/components/parameters/CandidateStageId"
+        - $ref: "#/components/parameters/NoteId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note]
+              properties:
+                note:
+                  type: string
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete stage note
+      operationId: deleteCandidateStageNote
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+        - $ref: "#/components/parameters/CandidateStageId"
+        - $ref: "#/components/parameters/NoteId"
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates/{candidateId}/stages/{stageId}/participants:
+    post:
+      summary: Assign stage participant
+      operationId: addCandidateStageParticipant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+        - $ref: "#/components/parameters/CandidateStageId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employee_id]
+              properties:
+                employee_id:
+                  type: string
+                  format: uuid
+      responses:
+        "201":
+          description: Added
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates/{candidateId}/stages/{stageId}/participants/{participantId}:
+    delete:
+      summary: Remove stage participant
+      operationId: removeCandidateStageParticipant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+        - $ref: "#/components/parameters/CandidateStageId"
+        - $ref: "#/components/parameters/ParticipantId"
+      responses:
+        "200":
+          description: Removed
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates/{candidateId}/hire:
+    post:
+      summary: Hire candidate into employee directory
+      operationId: hireCandidate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HireCandidateInput"
+      responses:
+        "201":
+          description: Hired
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates/{candidateId}/files:
+    get:
+      summary: List candidate CV files
+      operationId: listCandidateFiles
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+      responses:
+        "200":
+          description: Files
+    post:
+      summary: Attach CV from temporary upload
+      operationId: attachCandidateFile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [temporary_upload_id, media_id]
+              properties:
+                temporary_upload_id:
+                  type: integer
+                media_id:
+                  type: integer
+      responses:
+        "201":
+          description: Attached
+
+  /companies/{companyId}/job-openings/{jobOpeningId}/candidates/{candidateId}/files/{mediaId}:
+    delete:
+      summary: Delete candidate CV file
+      operationId: deleteCandidateFile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/JobOpeningId"
+        - $ref: "#/components/parameters/CandidateId"
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+
+  /companies/{companyId}/employees/import:
+    post:
+      summary: Import employees from CSV
+      operationId: importEmployees
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: "{ created: number, errors: [{row, message}] }"
+
+  /jobs:
+    get:
+      summary: List companies with open jobs (public)
+      operationId: listPublicJobCompanies
+      responses:
+        "200":
+          description: Companies with openings
+
+  /jobs/{companySlug}:
+    get:
+      summary: List company job openings (public)
+      operationId: listPublicCompanyJobs
+      parameters:
+        - $ref: "#/components/parameters/CompanySlug"
+      responses:
+        "200":
+          description: Active openings
+
+  /jobs/{companySlug}/jobs/{jobSlug}:
+    get:
+      summary: Get public job opening detail
+      operationId: getPublicJobOpening
+      parameters:
+        - $ref: "#/components/parameters/CompanySlug"
+        - $ref: "#/components/parameters/JobSlug"
+      responses:
+        "200":
+          description: Job detail
+    post:
+      summary: Start public application
+      operationId: createPublicCandidate
+      parameters:
+        - $ref: "#/components/parameters/CompanySlug"
+        - $ref: "#/components/parameters/JobSlug"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublicApplyInput"
+      responses:
+        "201":
+          description: Candidate created (incomplete)
+
+  /jobs/{companySlug}/jobs/{jobSlug}/apply/{candidateUuid}/files:
+    post:
+      summary: Attach CV during public apply
+      operationId: attachPublicCandidateFile
+      parameters:
+        - $ref: "#/components/parameters/CompanySlug"
+        - $ref: "#/components/parameters/JobSlug"
+        - $ref: "#/components/parameters/CandidateUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [temporary_upload_id, media_id]
+              properties:
+                temporary_upload_id:
+                  type: integer
+                media_id:
+                  type: integer
+      responses:
+        "201":
+          description: Attached
+    get:
+      summary: List CV files during public apply
+      operationId: listPublicCandidateFiles
+      parameters:
+        - $ref: "#/components/parameters/CompanySlug"
+        - $ref: "#/components/parameters/JobSlug"
+        - $ref: "#/components/parameters/CandidateUuid"
+      responses:
+        "200":
+          description: Files
+
+  /jobs/{companySlug}/jobs/{jobSlug}/apply/{candidateUuid}/files/{mediaId}:
+    delete:
+      summary: Remove CV during public apply
+      operationId: deletePublicCandidateFile
+      parameters:
+        - $ref: "#/components/parameters/CompanySlug"
+        - $ref: "#/components/parameters/JobSlug"
+        - $ref: "#/components/parameters/CandidateUuid"
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+
+  /jobs/{companySlug}/jobs/{jobSlug}/apply/{candidateUuid}/complete:
+    post:
+      summary: Finalize public application
+      operationId: completePublicApplication
+      parameters:
+        - $ref: "#/components/parameters/CompanySlug"
+        - $ref: "#/components/parameters/JobSlug"
+        - $ref: "#/components/parameters/CandidateUuid"
+      responses:
+        "200":
+          description: Application completed
+
+  /jobs/{companySlug}/jobs/{jobSlug}/apply/{candidateUuid}:
+    delete:
+      summary: Abandon incomplete application
+      operationId: abandonPublicApplication
+      parameters:
+        - $ref: "#/components/parameters/CompanySlug"
+        - $ref: "#/components/parameters/JobSlug"
+        - $ref: "#/components/parameters/CandidateUuid"
+      responses:
+        "200":
+          description: Abandoned
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2454,6 +3099,74 @@ components:
         format: uuid
     IssueId:
       name: issueId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TemplateId:
+      name: templateId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RecruitingStageId:
+      name: stageId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    JobOpeningId:
+      name: jobOpeningId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CandidateId:
+      name: candidateId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CandidateStageId:
+      name: stageId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    NoteId:
+      name: noteId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ParticipantId:
+      name: participantId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CompanySlug:
+      name: companySlug
+      in: path
+      required: true
+      schema:
+        type: string
+    JobSlug:
+      name: jobSlug
+      in: path
+      required: true
+      schema:
+        type: string
+    CandidateUuid:
+      name: candidateUuid
       in: path
       required: true
       schema:
@@ -3768,3 +4481,240 @@ components:
       properties:
         enabled:
           type: boolean
+
+    RecruitingStage:
+      type: object
+      required: [id, name, position]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        position:
+          type: integer
+
+    RecruitingStageTemplate:
+      type: object
+      required: [id, company_id, name, stages]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecruitingStage"
+
+    JobOpeningInput:
+      type: object
+      required: [title, description, position_id, recruiting_stage_template_id]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        position_id:
+          type: string
+          format: uuid
+        recruiting_stage_template_id:
+          type: string
+          format: uuid
+        team_id:
+          type: string
+          format: uuid
+          nullable: true
+        reference_number:
+          type: string
+          nullable: true
+        sponsor_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    JobOpening:
+      type: object
+      required: [id, company_id, title, slug, active, fulfilled, page_views]
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        slug:
+          type: string
+        reference_number:
+          type: string
+          nullable: true
+        position_id:
+          type: string
+          format: uuid
+        recruiting_stage_template_id:
+          type: string
+          format: uuid
+          nullable: true
+        team_id:
+          type: string
+          format: uuid
+          nullable: true
+        active:
+          type: boolean
+        fulfilled:
+          type: boolean
+        page_views:
+          type: integer
+        activated_at:
+          type: string
+          format: date-time
+          nullable: true
+        fulfilled_at:
+          type: string
+          format: date-time
+          nullable: true
+        sponsors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              first_name:
+                type: string
+              last_name:
+                type: string
+
+    CandidateStage:
+      type: object
+      required: [id, stage_name, stage_position, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        stage_name:
+          type: string
+        stage_position:
+          type: integer
+        status:
+          type: string
+          enum: [pending, passed, rejected]
+        decider_id:
+          type: string
+          format: uuid
+          nullable: true
+        decider_name:
+          type: string
+          nullable: true
+        decided_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Candidate:
+      type: object
+      required: [id, name, email, uuid, application_completed, rejected]
+      properties:
+        id:
+          type: string
+          format: uuid
+        job_opening_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        uuid:
+          type: string
+          format: uuid
+        url:
+          type: string
+          nullable: true
+        desired_salary:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        application_completed:
+          type: boolean
+        rejected:
+          type: boolean
+        employee_id:
+          type: string
+          format: uuid
+          nullable: true
+        employee_name:
+          type: string
+          nullable: true
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/CandidateStage"
+
+    HireCandidateInput:
+      type: object
+      required: [email, first_name, last_name, hired_at]
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        hired_at:
+          type: string
+          format: date
+
+    PublicApplyInput:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        url:
+          type: string
+          nullable: true
+        desired_salary:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    PublicCompanyJobs:
+      type: object
+      required: [slug, name, openings]
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        openings:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              slug:
+                type: string
+              reference_number:
+                type: string
+                nullable: true

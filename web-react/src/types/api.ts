@@ -491,3 +491,107 @@ export type ProjectBoard = {
   name: string
   sprints?: ProjectSprint[]
 }
+
+export type RecruitingStage = {
+  id: string
+  name: string
+  position: number
+}
+
+export type RecruitingStageTemplate = {
+  id: string
+  company_id: string
+  name: string
+  stages: RecruitingStage[]
+}
+
+export type JobOpening = {
+  id: string
+  company_id: string
+  title: string
+  description: string
+  slug: string
+  reference_number: string | null
+  position_id: string
+  position?: { id: string; title: string } | null
+  recruiting_stage_template_id: string | null
+  team_id: string | null
+  active: boolean
+  fulfilled: boolean
+  page_views: number
+  activated_at: string | null
+  fulfilled_at: string | null
+  sponsors: EmployeeSummary[]
+}
+
+export type CandidateStageNote = {
+  id: string
+  author_id: string | null
+  author_name: string
+  note: string
+  created_at?: string
+}
+
+export type CandidateStageParticipant = {
+  id: string
+  participant_id: string
+  participant_name: string
+  participated: boolean
+}
+
+export type CandidateStage = {
+  id: string
+  stage_name: string
+  stage_position: number
+  status: 'pending' | 'passed' | 'rejected'
+  decider_id: string | null
+  decider_name: string | null
+  decided_at: string | null
+  notes?: CandidateStageNote[]
+  participants?: CandidateStageParticipant[]
+}
+
+export type CandidateFile = {
+  id: number
+  file_name: string
+  mime_type: string | null
+  size: number
+  url: string
+}
+
+export type Candidate = {
+  id: string
+  job_opening_id: string
+  name: string
+  email: string
+  uuid: string
+  url: string | null
+  desired_salary: string | null
+  notes: string | null
+  application_completed: boolean
+  rejected: boolean
+  employee_id: string | null
+  employee_name: string | null
+  created_at?: string
+  stages?: CandidateStage[]
+  files?: CandidateFile[]
+}
+
+export type PublicJobCompany = {
+  slug: string
+  name: string
+  openings_count: number
+}
+
+export type PublicJobOpening = {
+  title: string
+  slug: string
+  reference_number: string | null
+  description?: string
+  company?: { slug: string; name: string }
+}
+
+export type EmployeeImportResult = {
+  created: number
+  errors: { row: number; message: string }[]
+}
