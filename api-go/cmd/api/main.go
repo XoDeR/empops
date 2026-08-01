@@ -31,6 +31,7 @@ import (
 	_ "github.com/XoDeR/empops/api-go/internal/modules/employee"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/finance"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/grow"
+	_ "github.com/XoDeR/empops/api-go/internal/modules/hardware"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/media"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/notification"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/place"

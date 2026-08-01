@@ -103,6 +103,12 @@ export default function CompanyLayout() {
             <NavLink to={`/companies/${companyId}/morale`} className={tabClass}>
               Morale
             </NavLink>
+            <NavLink to={`/companies/${companyId}/hardware`} className={tabClass}>
+              Hardware
+            </NavLink>
+            <NavLink to={`/companies/${companyId}/softwares`} className={tabClass}>
+              Software
+            </NavLink>
             <NavLink to={`/companies/${companyId}/recruiting`} className={tabClass}>
               Recruiting
             </NavLink>

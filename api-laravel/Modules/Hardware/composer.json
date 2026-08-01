@@ -1,0 +1,17 @@
+{
+    "name": "nwidart/hardware",
+    "description": "",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Hardware\\": "app/",
+            "Modules\\Hardware\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}

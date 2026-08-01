@@ -712,3 +712,39 @@ export type DisciplineCase = {
   events?: DisciplineEvent[]
 }
 
+export type Hardware = {
+  id: string
+  company_id: string
+  name: string
+  serial_number: string | null
+  employee_id: string | null
+  employee: EmployeeSummary | null
+  created_at?: string
+  updated_at?: string
+}
+
+export type Software = {
+  id: string
+  company_id: string
+  name: string
+  product_key: string | null
+  seats: number
+  seats_used?: number
+  remaining_seats?: number
+  website: string | null
+  licensed_to_name: string | null
+  licensed_to_email_address: string | null
+  order_number: string | null
+  purchase_amount: number | null
+  currency: string | null
+  converted_purchase_amount: number | null
+  converted_to_currency: string | null
+  converted_at: string | null
+  exchange_rate: number | null
+  purchased_at: string | null
+  employees?: EmployeeSummary[]
+  files?: ProjectFile[]
+  created_at?: string
+  updated_at?: string
+}
+

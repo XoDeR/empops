@@ -14,6 +14,7 @@ import {
   ExpenseCategoriesSection,
   WorkFromHomeAdminSection,
 } from '@/components/OperateAdminSections'
+import { InventoryAdminSection } from '@/components/ManageAdminSections'
 import { API_BASE } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import type {
@@ -734,6 +735,7 @@ export default function AdminlandPage() {
       <ExpenseCategoriesSection companyId={companyId} />
       <WorkFromHomeAdminSection companyId={companyId} />
       <ECoffeeAdminSection companyId={companyId} />
+      <InventoryAdminSection companyId={companyId} />
       <AccountantsSection companyId={companyId} />
       <PositionsSection companyId={companyId} />
       <EmployeeStatusesSection companyId={companyId} />

@@ -6,7 +6,7 @@ import { useCompanyContext } from '@/routes/CompanyLayout'
 import { ImageUploadField } from '@/components/ImageUploadField'
 import { PlacesSection } from '@/components/PlacesSection'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
-import type { Employee, EmployeeSummary } from '@/types/api'
+import type { Employee, EmployeeSummary, Hardware, Software } from '@/types/api'
 
 export default function EmployeeDetailPage() {
   const { companyId, employeeId } = useParams<{ companyId: string; employeeId: string }>()
@@ -43,6 +43,32 @@ export default function EmployeeDetailPage() {
       return res.data
     },
     enabled: Boolean(companyId) && isHrOrAdmin,
+  })
+
+  const canSeeAssets =
+    Boolean(companyId && employeeId) &&
+    (isHrOrAdmin || employeeId === company.employee_id)
+
+  const hardwareQuery = useQuery({
+    queryKey: ['employee-hardware', companyId, employeeId],
+    queryFn: async () => {
+      const res = await authFetch<Hardware[]>(
+        `/companies/${companyId}/employees/${employeeId}/hardware`,
+      )
+      return res.data
+    },
+    enabled: canSeeAssets,
+  })
+
+  const softwaresQuery = useQuery({
+    queryKey: ['employee-softwares', companyId, employeeId],
+    queryFn: async () => {
+      const res = await authFetch<Software[]>(
+        `/companies/${companyId}/employees/${employeeId}/softwares`,
+      )
+      return res.data
+    },
+    enabled: canSeeAssets,
   })
 
   const invalidate = () => {
@@ -274,6 +300,60 @@ export default function EmployeeDetailPage() {
               )}
             </ul>
           </section>
+
+          {canSeeAssets && (
+            <>
+              <section className="rounded-2xl border border-black/10 bg-white/70 p-4">
+                <h3 className="font-medium">Assigned hardware</h3>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {(hardwareQuery.data ?? []).map((h) => (
+                    <li key={h.id}>
+                      {isHrOrAdmin ? (
+                        <Link
+                          to={`/companies/${companyId}/hardware/${h.id}`}
+                          className="hover:underline"
+                        >
+                          {h.name}
+                          {h.serial_number ? ` (${h.serial_number})` : ''}
+                        </Link>
+                      ) : (
+                        <span>
+                          {h.name}
+                          {h.serial_number ? ` (${h.serial_number})` : ''}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                  {!hardwareQuery.isLoading && (hardwareQuery.data ?? []).length === 0 && (
+                    <li className="text-black/50">No hardware assigned.</li>
+                  )}
+                </ul>
+              </section>
+
+              <section className="rounded-2xl border border-black/10 bg-white/70 p-4">
+                <h3 className="font-medium">Assigned software</h3>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {(softwaresQuery.data ?? []).map((s) => (
+                    <li key={s.id}>
+                      {isHrOrAdmin ? (
+                        <Link
+                          to={`/companies/${companyId}/softwares/${s.id}`}
+                          className="hover:underline"
+                        >
+                          {s.name}
+                        </Link>
+                      ) : (
+                        <span>{s.name}</span>
+                      )}
+                    </li>
+                  ))}
+                  {!softwaresQuery.isLoading && (softwaresQuery.data ?? []).length === 0 && (
+                    <li className="text-black/50">No software seats.</li>
+                  )}
+                </ul>
+              </section>
+            </>
+          )}
         </div>
       )}
     </div>

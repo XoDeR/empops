@@ -3597,6 +3597,450 @@ paths:
       responses:
         "200": {description: Attached}
 
+  # --- Hardware (Step 9) ---
+
+  /companies/{companyId}/hardware:
+    get:
+      summary: List hardware assets
+      operationId: listHardware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: status
+          in: query
+          schema: {type: string, enum: [all, available, lent], default: all}
+        - name: q
+          in: query
+          schema: {type: string}
+      responses:
+        "200":
+          description: Hardware list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Hardware"}
+    post:
+      summary: Create hardware asset
+      operationId: createHardware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateHardwareRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Hardware"}
+
+  /companies/{companyId}/hardware/{hardwareId}:
+    get:
+      summary: Get hardware asset
+      operationId: getHardware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: hardwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Hardware detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Hardware"}
+    patch:
+      summary: Update hardware asset
+      operationId: updateHardware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: hardwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateHardwareRequest"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Hardware"}
+    delete:
+      summary: Delete hardware asset
+      operationId: deleteHardware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: hardwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Deleted}
+
+  /companies/{companyId}/hardware/{hardwareId}/lend:
+    post:
+      summary: Lend hardware to an employee
+      operationId: lendHardware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: hardwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employee_id]
+              properties:
+                employee_id: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Lent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Hardware"}
+
+  /companies/{companyId}/hardware/{hardwareId}/regain:
+    post:
+      summary: Regain hardware from employee
+      operationId: regainHardware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: hardwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Regained
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Hardware"}
+
+  /companies/{companyId}/employees/{employeeId}/hardware:
+    get:
+      summary: List hardware assigned to employee
+      operationId: listEmployeeHardware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Assigned hardware
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Hardware"}
+
+  /companies/{companyId}/softwares:
+    get:
+      summary: List software licenses
+      operationId: listSoftwares
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Software list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Software"}
+    post:
+      summary: Create software license
+      operationId: createSoftware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateSoftwareRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Software"}
+
+  /companies/{companyId}/softwares/{softwareId}:
+    get:
+      summary: Get software license
+      operationId: getSoftware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: softwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Software detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Software"}
+    patch:
+      summary: Update software license
+      operationId: updateSoftware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: softwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateSoftwareRequest"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Software"}
+    delete:
+      summary: Delete software license
+      operationId: deleteSoftware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: softwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Deleted}
+
+  /companies/{companyId}/softwares/{softwareId}/seats:
+    post:
+      summary: Give a software seat to an employee
+      operationId: giveSoftwareSeat
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: softwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employee_id]
+              properties:
+                employee_id: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Seat given
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Software"}
+        "422": {description: No seats remaining}
+
+  /companies/{companyId}/softwares/{softwareId}/seats/all:
+    post:
+      summary: Give seats to all eligible employees without a seat
+      operationId: giveSoftwareSeatsToAll
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: softwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Seats assigned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      assigned: {type: integer}
+                      software: {$ref: "#/components/schemas/Software"}
+
+  /companies/{companyId}/softwares/{softwareId}/seats/{employeeId}:
+    delete:
+      summary: Revoke a software seat from an employee
+      operationId: revokeSoftwareSeat
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: softwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Seat revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Software"}
+
+  /companies/{companyId}/softwares/{softwareId}/employees-without:
+    get:
+      summary: Count employees without this software seat
+      operationId: countEmployeesWithoutSoftware
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: softwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Count and remaining seats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      employees_without: {type: integer}
+                      remaining_seats: {type: integer}
+                      seats: {type: integer}
+
+  /companies/{companyId}/softwares/{softwareId}/files:
+    post:
+      summary: Attach file to software license
+      operationId: attachSoftwareFile
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: softwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [temporary_upload_id, media_id]
+              properties:
+                temporary_upload_id: {type: integer}
+                media_id: {type: integer}
+      responses:
+        "200":
+          description: Attached
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/ProjectFile"}
+
+  /companies/{companyId}/softwares/{softwareId}/files/{mediaId}:
+    delete:
+      summary: Detach file from software license
+      operationId: detachSoftwareFile
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: softwareId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: mediaId
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        "200": {description: Detached}
+
+  /companies/{companyId}/employees/{employeeId}/softwares:
+    get:
+      summary: List software seats assigned to employee
+      operationId: listEmployeeSoftwares
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Assigned software
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Software"}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -5461,3 +5905,90 @@ components:
               author_name: {type: string}
               happened_at: {type: string, format: date}
               description: {type: string}
+
+    Hardware:
+      type: object
+      required: [id, company_id, name]
+      properties:
+        id: {type: string, format: uuid}
+        company_id: {type: string, format: uuid}
+        name: {type: string}
+        serial_number: {type: string, nullable: true}
+        employee_id: {type: string, format: uuid, nullable: true}
+        employee: {$ref: "#/components/schemas/EmployeeSummary", nullable: true}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+
+    CreateHardwareRequest:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string}
+        serial_number: {type: string, nullable: true}
+        employee_id: {type: string, format: uuid, nullable: true}
+
+    UpdateHardwareRequest:
+      type: object
+      properties:
+        name: {type: string}
+        serial_number: {type: string, nullable: true}
+
+    Software:
+      type: object
+      required: [id, company_id, name, seats]
+      properties:
+        id: {type: string, format: uuid}
+        company_id: {type: string, format: uuid}
+        name: {type: string}
+        product_key: {type: string, nullable: true}
+        seats: {type: integer}
+        seats_used: {type: integer}
+        remaining_seats: {type: integer}
+        website: {type: string, nullable: true}
+        licensed_to_name: {type: string, nullable: true}
+        licensed_to_email_address: {type: string, nullable: true}
+        order_number: {type: string, nullable: true}
+        purchase_amount: {type: integer, nullable: true}
+        currency: {type: string, nullable: true}
+        converted_purchase_amount: {type: integer, nullable: true}
+        converted_to_currency: {type: string, nullable: true}
+        converted_at: {type: string, format: date-time, nullable: true}
+        exchange_rate: {type: number, nullable: true}
+        purchased_at: {type: string, format: date, nullable: true}
+        employees:
+          type: array
+          items: {$ref: "#/components/schemas/EmployeeSummary"}
+        files:
+          type: array
+          items: {$ref: "#/components/schemas/ProjectFile"}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+
+    CreateSoftwareRequest:
+      type: object
+      required: [name, seats, product_key]
+      properties:
+        name: {type: string}
+        product_key: {type: string}
+        seats: {type: integer, minimum: 1}
+        website: {type: string, nullable: true}
+        licensed_to_name: {type: string, nullable: true}
+        licensed_to_email_address: {type: string, nullable: true}
+        order_number: {type: string, nullable: true}
+        purchase_amount: {type: integer, nullable: true, minimum: 1}
+        currency: {type: string, minLength: 3, maxLength: 3, nullable: true}
+        purchased_at: {type: string, format: date, nullable: true}
+
+    UpdateSoftwareRequest:
+      type: object
+      properties:
+        name: {type: string}
+        product_key: {type: string}
+        seats: {type: integer, minimum: 1}
+        website: {type: string, nullable: true}
+        licensed_to_name: {type: string, nullable: true}
+        licensed_to_email_address: {type: string, nullable: true}
+        order_number: {type: string, nullable: true}
+        purchase_amount: {type: integer, nullable: true, minimum: 1}
+        currency: {type: string, minLength: 3, maxLength: 3, nullable: true}
+        purchased_at: {type: string, format: date, nullable: true}

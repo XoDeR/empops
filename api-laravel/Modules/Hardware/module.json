@@ -1,0 +1,11 @@
+{
+    "name": "Hardware",
+    "alias": "hardware",
+    "description": "Hardware assets and software license inventory",
+    "keywords": [],
+    "priority": 65,
+    "providers": [
+        "Modules\\Hardware\\Providers\\HardwareServiceProvider"
+    ],
+    "files": []
+}

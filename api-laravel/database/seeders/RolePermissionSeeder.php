@@ -84,6 +84,10 @@ class RolePermissionSeeder extends Seeder
             'e_coffee.manage',
             'discipline.view',
             'discipline.manage',
+            'hardware.view',
+            'hardware.manage',
+            'software.view',
+            'software.manage',
         ];
 
         foreach ($permissions as $name) {
@@ -171,6 +175,10 @@ class RolePermissionSeeder extends Seeder
             'e_coffee.manage',
             'discipline.view',
             'discipline.manage',
+            'hardware.view',
+            'hardware.manage',
+            'software.view',
+            'software.manage',
         ]);
 
         $accountant->syncPermissions([

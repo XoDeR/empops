@@ -16,6 +16,10 @@ import DisciplineListPage from '@/pages/DisciplineListPage'
 import DisciplineDetailPage from '@/pages/DisciplineDetailPage'
 import SkillsPage from '@/pages/SkillsPage'
 import MoraleHistoryPage from '@/pages/MoraleHistoryPage'
+import HardwareListPage from '@/pages/HardwareListPage'
+import HardwareDetailPage from '@/pages/HardwareDetailPage'
+import SoftwareListPage from '@/pages/SoftwareListPage'
+import SoftwareDetailPage from '@/pages/SoftwareDetailPage'
 import JobsPage from '@/pages/public/JobsPage'
 import CompanyJobsPage from '@/pages/public/CompanyJobsPage'
 import JobApplyPage from '@/pages/public/JobApplyPage'
@@ -53,6 +57,10 @@ export default function App() {
             <Route path="discipline/:caseId" element={<DisciplineDetailPage />} />
             <Route path="skills" element={<SkillsPage />} />
             <Route path="morale" element={<MoraleHistoryPage />} />
+            <Route path="hardware" element={<HardwareListPage />} />
+            <Route path="hardware/:hardwareId" element={<HardwareDetailPage />} />
+            <Route path="softwares" element={<SoftwareListPage />} />
+            <Route path="softwares/:softwareId" element={<SoftwareDetailPage />} />
             <Route path="adminland" element={<AdminlandPage />} />
           </Route>
         </Route>
