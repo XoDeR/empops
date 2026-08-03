@@ -12,5 +12,7 @@
     "Project": true,
     "Recruit": true,
     "Grow": true,
-    "Hardware": true
+    "Hardware": true,
+    "Group": true,
+    "Billing": true
 }

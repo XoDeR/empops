@@ -9,6 +9,7 @@ use Modules\Company\Http\Controllers\CompanyNewsController;
 use Modules\Company\Http\Controllers\DashboardController;
 use Modules\Company\Http\Controllers\InvitationController;
 use Modules\Company\Http\Controllers\QuestionController;
+use Modules\Company\Http\Controllers\StepTenController;
 use Modules\Company\Http\Middleware\EnsureCompanyMember;
 use Modules\Company\Http\Middleware\EnsurePermission;
 
@@ -62,5 +63,34 @@ Route::prefix('v1')->middleware(AuthenticateJwt::class)->group(function () {
 
             Route::get('audit-logs', [AuditLogController::class, 'index'])
                 ->middleware(EnsurePermission::class.':adminland.access');
+
+            Route::get('flows', [StepTenController::class, 'flows'])->middleware(EnsurePermission::class.':flows.manage');
+            Route::post('flows', [StepTenController::class, 'createFlow'])->middleware(EnsurePermission::class.':flows.manage');
+            Route::get('flows/{flowId}', [StepTenController::class, 'flow'])->middleware(EnsurePermission::class.':flows.manage');
+            Route::patch('flows/{flowId}', [StepTenController::class, 'updateFlow'])->middleware(EnsurePermission::class.':flows.manage');
+            Route::delete('flows/{flowId}', [StepTenController::class, 'deleteFlow'])->middleware(EnsurePermission::class.':flows.manage');
+            Route::post('flows/{flowId}/steps', [StepTenController::class, 'addStep'])->middleware(EnsurePermission::class.':flows.manage');
+            Route::delete('flows/{flowId}/steps/{stepId}', [StepTenController::class, 'deleteStep'])->middleware(EnsurePermission::class.':flows.manage');
+            Route::post('flows/{flowId}/steps/{stepId}/actions', [StepTenController::class, 'addAction'])->middleware(EnsurePermission::class.':flows.manage');
+            Route::delete('flows/{flowId}/steps/{stepId}/actions/{actionId}', [StepTenController::class, 'deleteAction'])->middleware(EnsurePermission::class.':flows.manage');
+
+            Route::get('wikis', [StepTenController::class, 'wikis'])->middleware(EnsurePermission::class.':wiki.view');
+            Route::post('wikis', [StepTenController::class, 'createWiki'])->middleware(EnsurePermission::class.':wiki.create');
+            Route::get('wikis/{wikiId}', [StepTenController::class, 'wiki'])->middleware(EnsurePermission::class.':wiki.view');
+            Route::patch('wikis/{wikiId}', [StepTenController::class, 'updateWiki'])->middleware(EnsurePermission::class.':wiki.update');
+            Route::delete('wikis/{wikiId}', [StepTenController::class, 'deleteWiki'])->middleware(EnsurePermission::class.':wiki.delete');
+            Route::post('wikis/{wikiId}/pages', [StepTenController::class, 'createPage'])->middleware(EnsurePermission::class.':wiki.create');
+            Route::get('wikis/{wikiId}/pages/{pageId}', [StepTenController::class, 'page'])->middleware(EnsurePermission::class.':wiki.view');
+            Route::patch('wikis/{wikiId}/pages/{pageId}', [StepTenController::class, 'updatePage'])->middleware(EnsurePermission::class.':wiki.update');
+            Route::delete('wikis/{wikiId}/pages/{pageId}', [StepTenController::class, 'deletePage'])->middleware(EnsurePermission::class.':wiki.delete');
+
+            Route::get('ama-sessions', [StepTenController::class, 'amaSessions'])->middleware(EnsurePermission::class.':ama.view');
+            Route::post('ama-sessions', [StepTenController::class, 'createAma'])->middleware(EnsurePermission::class.':ama.manage');
+            Route::get('ama-sessions/{sessionId}', [StepTenController::class, 'amaSession'])->middleware(EnsurePermission::class.':ama.view');
+            Route::patch('ama-sessions/{sessionId}', [StepTenController::class, 'updateAma'])->middleware(EnsurePermission::class.':ama.manage');
+            Route::delete('ama-sessions/{sessionId}', [StepTenController::class, 'deleteAma'])->middleware(EnsurePermission::class.':ama.manage');
+            Route::post('ama-sessions/{sessionId}/questions', [StepTenController::class, 'ask'])->middleware(EnsurePermission::class.':ama.view');
+            Route::patch('ama-sessions/{sessionId}/questions/{questionId}', [StepTenController::class, 'answer'])->middleware(EnsurePermission::class.':ama.manage');
+            Route::get('wikis/{wikiId}/pages/{pageId}/revisions', [StepTenController::class, 'pageRevisions'])->middleware(EnsurePermission::class.':wiki.view');
         });
 });

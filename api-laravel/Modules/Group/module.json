@@ -1,0 +1,9 @@
+{
+    "name": "Group",
+    "alias": "group",
+    "description": "Employee groups and meetings",
+    "keywords": [],
+    "priority": 70,
+    "providers": ["Modules\\Group\\Providers\\GroupServiceProvider"],
+    "files": []
+}

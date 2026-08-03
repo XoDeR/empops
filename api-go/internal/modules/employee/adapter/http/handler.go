@@ -158,8 +158,14 @@ func (h *Handler) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 	err = h.pool.QueryRow(r.Context(), `
 		INSERT INTO employees (
 			id, company_id, user_id, email, first_name, last_name, hired_at,
-			position_id, employee_status_id, locked, created_at, updated_at
-		) VALUES ($1, $2, NULL, $3, $4, $5, $6, $7, $8, false, now(), now())
+			position_id, employee_status_id, locked,
+			amount_of_allowed_holidays, amount_of_sick_days, amount_of_pto_days,
+			created_at, updated_at
+		) VALUES ($1, $2, NULL, $3, $4, $5, $6, $7, $8, false,
+			(SELECT default_amount_of_allowed_holidays FROM company_pto_policies WHERE company_id=$2 AND year=EXTRACT(YEAR FROM CURRENT_DATE)),
+			(SELECT default_amount_of_sick_days FROM company_pto_policies WHERE company_id=$2 AND year=EXTRACT(YEAR FROM CURRENT_DATE)),
+			(SELECT default_amount_of_pto_days FROM company_pto_policies WHERE company_id=$2 AND year=EXTRACT(YEAR FROM CURRENT_DATE)),
+			now(), now())
 		RETURNING id`,
 		employeeID, companyID, req.Email, req.FirstName, req.LastName, hiredAt,
 		req.PositionID, req.EmployeeStatusID,
@@ -249,6 +255,7 @@ func (h *Handler) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 		response.Fail(w, http.StatusInternalServerError, "employee lookup failed", err.Error())
 		return
 	}
+	wasLocked := locked
 
 	if req.FirstName != nil {
 		firstName = strings.TrimSpace(*req.FirstName)
@@ -304,6 +311,13 @@ func (h *Handler) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 		}
 		response.Fail(w, http.StatusInternalServerError, "update employee failed", err.Error())
 		return
+	}
+	if !wasLocked && locked {
+		_, _ = h.pool.Exec(r.Context(), `INSERT INTO flow_action_runs(id,company_id,flow_action_id,employee_id,due_on)
+			SELECT gen_random_uuid(),f.company_id,a.id,$1,
+				CURRENT_DATE + (CASE WHEN s.modifier='before' THEN -s.real_number_of_days ELSE s.real_number_of_days END)
+			FROM flows f JOIN flow_steps s ON s.flow_id=f.id JOIN flow_actions a ON a.step_id=s.id
+			WHERE f.company_id=$2 AND f.type='leave' ON CONFLICT DO NOTHING`, employeeID, companyID)
 	}
 
 	payload, err := employeePayload(r.Context(), h.pool, employeeID, companyID, false)

@@ -14,8 +14,14 @@ import {
   ExpenseCategoriesSection,
   WorkFromHomeAdminSection,
 } from '@/components/OperateAdminSections'
-import { InventoryAdminSection } from '@/components/ManageAdminSections'
-import { API_BASE } from '@/lib/api'
+import {
+  BillingInvoicesSection,
+  FlowsSection,
+  InventoryAdminSection,
+  PtoPoliciesSection,
+  StepTenLinksSection,
+} from '@/components/ManageAdminSections'
+import { API_BASE, apiFetch } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import type {
   EmployeeImportResult,
@@ -24,6 +30,7 @@ import type {
   Position,
   RecruitingStage,
   RecruitingStageTemplate,
+  InstanceFlags,
 } from '@/types/api'
 
 const settingsSchema = z.object({
@@ -715,6 +722,10 @@ function EmployeeCsvImportSection({ companyId }: { companyId: string }) {
 export default function AdminlandPage() {
   const { companyId } = useParams<{ companyId: string }>()
   const { isAdmin, isHrOrAdmin } = useCompanyContext()
+  const instanceQuery = useQuery({
+    queryKey: ['instance'],
+    queryFn: async () => (await apiFetch<InstanceFlags>('/instance')).data,
+  })
 
   if (!isHrOrAdmin || !companyId) {
     return <Navigate to={`/companies/${companyId}/employees`} replace />
@@ -732,6 +743,10 @@ export default function AdminlandPage() {
       {isAdmin && <CompanySettingsSection companyId={companyId} />}
       <CompanyNewsSection companyId={companyId} />
       <QuestionsSection companyId={companyId} />
+      <StepTenLinksSection companyId={companyId} />
+      <PtoPoliciesSection companyId={companyId} />
+      <FlowsSection companyId={companyId} />
+      {instanceQuery.data?.enable_paid_plan && <BillingInvoicesSection companyId={companyId} />}
       <ExpenseCategoriesSection companyId={companyId} />
       <WorkFromHomeAdminSection companyId={companyId} />
       <ECoffeeAdminSection companyId={companyId} />

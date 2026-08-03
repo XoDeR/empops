@@ -1,0 +1,9 @@
+{
+    "name": "nwidart/group",
+    "description": "",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Group\\": "app/"
+        }
+    }
+}

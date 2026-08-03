@@ -23,11 +23,15 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ]);
 
-        $payload = $this->auth->register(
-            $validated['name'],
-            $validated['email'],
-            $validated['password'],
-        );
+        try {
+            $payload = $this->auth->register(
+                $validated['name'],
+                $validated['email'],
+                $validated['password'],
+            );
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), $e->getCode() ?: 400);
+        }
 
         return ApiResponse::success($payload, 'Registered', 201);
     }

@@ -1,11 +1,11 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiFetch } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
-import type { TokenPayload } from '@/types/api'
+import type { InstanceFlags, TokenPayload } from '@/types/api'
 
 const registerSchema = z
   .object({
@@ -24,6 +24,11 @@ type RegisterValues = z.infer<typeof registerSchema>
 export default function RegisterPage() {
   const navigate = useNavigate()
   const setSession = useAuthStore((s) => s.setSession)
+  const instanceQuery = useQuery({
+    queryKey: ['instance'],
+    queryFn: async () => (await apiFetch<InstanceFlags>('/instance')).data,
+    retry: false,
+  })
 
   const {
     register,
@@ -56,7 +61,12 @@ export default function RegisterPage() {
         <h1 className="text-3xl font-semibold tracking-tight">Create your account</h1>
       </header>
 
-      <form
+      {instanceQuery.data && !instanceQuery.data.enable_signups ? (
+        <section className="space-y-4 rounded-2xl border border-black/10 bg-white/80 p-5 text-center shadow-sm">
+          <p className="font-medium">Registration is disabled for this instance.</p>
+          <Link className="text-sm text-[var(--empops-accent)] underline" to="/login">Sign in instead</Link>
+        </section>
+      ) : <form
         className="space-y-4 rounded-2xl border border-black/10 bg-white/80 p-5 shadow-sm"
         onSubmit={handleSubmit((values) => registerMutation.mutate(values))}
       >
@@ -109,7 +119,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           className="w-full rounded-lg bg-[var(--empops-accent)] px-4 py-2.5 font-medium text-white hover:opacity-90 disabled:opacity-60"
-          disabled={registerMutation.isPending}
+          disabled={registerMutation.isPending || instanceQuery.isLoading}
         >
           {registerMutation.isPending ? 'Creating account…' : 'Register'}
         </button>
@@ -119,7 +129,7 @@ export default function RegisterPage() {
             Sign in
           </Link>
         </p>
-      </form>
+      </form>}
     </main>
   )
 }

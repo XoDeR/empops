@@ -24,6 +24,13 @@ import JobsPage from '@/pages/public/JobsPage'
 import CompanyJobsPage from '@/pages/public/CompanyJobsPage'
 import JobApplyPage from '@/pages/public/JobApplyPage'
 import DashboardPage from '@/pages/DashboardPage'
+import WikiListPage from '@/pages/WikiListPage'
+import WikiDetailPage from '@/pages/WikiDetailPage'
+import AmaListPage from '@/pages/AmaListPage'
+import AmaSessionPage from '@/pages/AmaSessionPage'
+import GroupsPage from '@/pages/GroupsPage'
+import GroupDetailPage from '@/pages/GroupDetailPage'
+import MeetingDetailPage from '@/pages/MeetingDetailPage'
 import ProtectedRoute from '@/routes/ProtectedRoute'
 import AppLayout from '@/routes/AppLayout'
 import CompanyLayout from '@/routes/CompanyLayout'
@@ -50,6 +57,13 @@ export default function App() {
             <Route path="teams/:teamId" element={<TeamDetailPage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="projects/:projectId" element={<ProjectDetailPage />} />
+            <Route path="wikis" element={<WikiListPage />} />
+            <Route path="wikis/:wikiId" element={<WikiDetailPage />} />
+            <Route path="ama" element={<AmaListPage />} />
+            <Route path="ama/:sessionId" element={<AmaSessionPage />} />
+            <Route path="groups" element={<GroupsPage />} />
+            <Route path="groups/:groupId" element={<GroupDetailPage />} />
+            <Route path="groups/:groupId/meetings/:meetingId" element={<MeetingDetailPage />} />
             <Route path="recruiting" element={<RecruitingPage />} />
             <Route path="recruiting/:jobOpeningId" element={<JobOpeningDetailPage />} />
             <Route path="one-on-ones/:entryId" element={<OneOnOneDetailPage />} />

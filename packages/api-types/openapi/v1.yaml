@@ -4041,6 +4041,1220 @@ paths:
                     type: array
                     items: {$ref: "#/components/schemas/Software"}
 
+  # --- Step 10: PTO ---
+
+  /companies/{companyId}/pto-policies:
+    get:
+      summary: List PTO policies
+      operationId: listPtoPolicies
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Policies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/PtoPolicy"}
+    post:
+      summary: Create PTO policy for a year
+      operationId: createPtoPolicy
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreatePtoPolicyRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/PtoPolicy"}
+
+  /companies/{companyId}/pto-policies/{policyId}:
+    get:
+      summary: Get PTO policy
+      operationId: getPtoPolicy
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: policyId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Policy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/PtoPolicy"}
+    patch:
+      summary: Update PTO policy defaults
+      operationId: updatePtoPolicy
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: policyId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdatePtoPolicyRequest"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/PtoPolicy"}
+
+  /companies/{companyId}/pto-policies/{policyId}/calendar:
+    get:
+      summary: Get company calendar days for a PTO policy year
+      operationId: getPtoCalendar
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: policyId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Calendar days
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/PtoCalendarDay"}
+
+  /companies/{companyId}/pto-policies/{policyId}/calendar/{day}:
+    patch:
+      summary: Toggle whether a calendar day is worked
+      operationId: updatePtoCalendarDay
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: policyId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: day
+          in: path
+          required: true
+          schema: {type: string, format: date}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_worked]
+              properties:
+                is_worked: {type: boolean}
+      responses:
+        "200":
+          description: Updated day
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/PtoCalendarDay"}
+
+  /companies/{companyId}/employees/{employeeId}/holiday-balance:
+    get:
+      summary: Employee holiday balance
+      operationId: getHolidayBalance
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/HolidayBalance"}
+
+  /companies/{companyId}/employees/{employeeId}/holidays:
+    get:
+      summary: List planned holidays
+      operationId: listPlannedHolidays
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Holidays
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/PlannedHoliday"}
+    post:
+      summary: Plan a holiday
+      operationId: createPlannedHoliday
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreatePlannedHolidayRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/PlannedHoliday"}
+
+  /companies/{companyId}/employees/{employeeId}/holidays/{holidayId}:
+    delete:
+      summary: Delete planned holiday
+      operationId: deletePlannedHoliday
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/EmployeeId"
+        - name: holidayId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  # --- Step 10: Flows ---
+
+  /companies/{companyId}/flows:
+    get:
+      summary: List flows
+      operationId: listFlows
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Flows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Flow"}
+    post:
+      summary: Create flow
+      operationId: createFlow
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateFlowRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Flow"}
+
+  /companies/{companyId}/flows/{flowId}:
+    get:
+      summary: Get flow with steps
+      operationId: getFlow
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: flowId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Flow
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Flow"}
+    delete:
+      summary: Delete flow
+      operationId: deleteFlow
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: flowId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  /companies/{companyId}/flows/{flowId}/steps:
+    post:
+      summary: Add step to flow
+      operationId: addFlowStep
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: flowId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateFlowStepRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/FlowStep"}
+
+  /companies/{companyId}/flows/{flowId}/steps/{stepId}:
+    delete:
+      summary: Remove step
+      operationId: deleteFlowStep
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: flowId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: stepId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  /companies/{companyId}/flows/{flowId}/steps/{stepId}/actions:
+    post:
+      summary: Add action to step
+      operationId: addFlowAction
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: flowId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: stepId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateFlowActionRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/FlowAction"}
+
+  /companies/{companyId}/flows/{flowId}/steps/{stepId}/actions/{actionId}:
+    delete:
+      summary: Remove action
+      operationId: deleteFlowAction
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: flowId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: stepId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: actionId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  # --- Step 10: Wiki ---
+
+  /companies/{companyId}/wikis:
+    get:
+      summary: List wikis
+      operationId: listWikis
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Wikis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Wiki"}
+    post:
+      summary: Create wiki
+      operationId: createWiki
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: {type: string}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Wiki"}
+
+  /companies/{companyId}/wikis/{wikiId}:
+    get:
+      summary: Get wiki with pages
+      operationId: getWiki
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: wikiId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Wiki
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Wiki"}
+    patch:
+      summary: Update wiki
+      operationId: updateWiki
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: wikiId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: {type: string}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Wiki"}
+    delete:
+      summary: Delete wiki
+      operationId: deleteWiki
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: wikiId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  /companies/{companyId}/wikis/{wikiId}/pages:
+    post:
+      summary: Create wiki page
+      operationId: createWikiPage
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: wikiId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateWikiPageRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/WikiPage"}
+
+  /companies/{companyId}/wikis/{wikiId}/pages/{pageId}:
+    get:
+      summary: Get wiki page
+      operationId: getWikiPage
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: wikiId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: pageId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/WikiPage"}
+    patch:
+      summary: Update wiki page (creates revision)
+      operationId: updateWikiPage
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: wikiId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: pageId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateWikiPageRequest"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/WikiPage"}
+    delete:
+      summary: Delete wiki page
+      operationId: deleteWikiPage
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: wikiId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: pageId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  /companies/{companyId}/wikis/{wikiId}/pages/{pageId}/revisions:
+    get:
+      summary: List page revisions
+      operationId: listWikiPageRevisions
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: wikiId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: pageId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Revisions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/WikiPageRevision"}
+
+  # --- Step 10: AMA ---
+
+  /companies/{companyId}/ama-sessions:
+    get:
+      summary: List AMA sessions
+      operationId: listAmaSessions
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/AmaSession"}
+    post:
+      summary: Create AMA session
+      operationId: createAmaSession
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateAmaSessionRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/AmaSession"}
+
+  /companies/{companyId}/ama-sessions/{sessionId}:
+    get:
+      summary: Get AMA session with questions
+      operationId: getAmaSession
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: sessionId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/AmaSession"}
+    patch:
+      summary: Update AMA session
+      operationId: updateAmaSession
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: sessionId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateAmaSessionRequest"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/AmaSession"}
+    delete:
+      summary: Delete AMA session
+      operationId: deleteAmaSession
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: sessionId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  /companies/{companyId}/ama-sessions/{sessionId}/questions:
+    post:
+      summary: Ask a question on an AMA session
+      operationId: askAmaQuestion
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: sessionId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateAmaQuestionRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/AmaQuestion"}
+
+  /companies/{companyId}/ama-sessions/{sessionId}/questions/{questionId}:
+    patch:
+      summary: Mark AMA question answered
+      operationId: updateAmaQuestion
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: sessionId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: questionId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                answered: {type: boolean}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/AmaQuestion"}
+
+  # --- Step 10: Groups ---
+
+  /companies/{companyId}/groups:
+    get:
+      summary: List groups
+      operationId: listGroups
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Groups
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Group"}
+    post:
+      summary: Create group
+      operationId: createGroup
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateGroupRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Group"}
+
+  /companies/{companyId}/groups/{groupId}:
+    get:
+      summary: Get group
+      operationId: getGroup
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Group
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Group"}
+    patch:
+      summary: Update group
+      operationId: updateGroup
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateGroupRequest"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Group"}
+    delete:
+      summary: Delete group
+      operationId: deleteGroup
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  /companies/{companyId}/groups/{groupId}/members/{employeeId}:
+    post:
+      summary: Add group member
+      operationId: addGroupMember
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Group"}
+    delete:
+      summary: Remove group member
+      operationId: removeGroupMember
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Group"}
+
+  /companies/{companyId}/groups/{groupId}/meetings:
+    get:
+      summary: List meetings
+      operationId: listMeetings
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Meetings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Meeting"}
+    post:
+      summary: Create meeting
+      operationId: createMeeting
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                happened_at: {type: string, format: date, nullable: true}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Meeting"}
+
+  /companies/{companyId}/groups/{groupId}/meetings/{meetingId}:
+    get:
+      summary: Get meeting
+      operationId: getMeeting
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: meetingId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Meeting
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Meeting"}
+    patch:
+      summary: Update meeting
+      operationId: updateMeeting
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: meetingId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                happened: {type: boolean}
+                happened_at: {type: string, format: date, nullable: true}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/Meeting"}
+    delete:
+      summary: Delete meeting
+      operationId: deleteMeeting
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: meetingId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  /companies/{companyId}/groups/{groupId}/meetings/{meetingId}/agenda:
+    post:
+      summary: Add agenda item
+      operationId: addAgendaItem
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: meetingId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateAgendaItemRequest"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/AgendaItem"}
+
+  /companies/{companyId}/groups/{groupId}/meetings/{meetingId}/agenda/{itemId}:
+    patch:
+      summary: Update agenda item
+      operationId: updateAgendaItem
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: meetingId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: itemId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateAgendaItemRequest"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/AgendaItem"}
+    delete:
+      summary: Delete agenda item
+      operationId: deleteAgendaItem
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: meetingId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: itemId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  /companies/{companyId}/groups/{groupId}/meetings/{meetingId}/agenda/{itemId}/decisions:
+    post:
+      summary: Add meeting decision
+      operationId: addMeetingDecision
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: meetingId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: itemId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [description]
+              properties:
+                description: {type: string}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/MeetingDecision"}
+
+  /companies/{companyId}/groups/{groupId}/meetings/{meetingId}/agenda/{itemId}/decisions/{decisionId}:
+    delete:
+      summary: Delete meeting decision
+      operationId: deleteMeetingDecision
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: meetingId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: itemId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: decisionId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Deleted}
+
+  # --- Step 10: Billing + instance ---
+
+  /companies/{companyId}/invoices:
+    get:
+      summary: List usage invoices (paid plan only)
+      operationId: listInvoices
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Invoices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/CompanyInvoice"}
+
+  /instance:
+    get:
+      summary: Public instance feature flags
+      operationId: getInstance
+      responses:
+        "200":
+          description: Flags
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: "#/components/schemas/InstanceFlags"}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -5992,3 +7206,291 @@ components:
         purchase_amount: {type: integer, nullable: true, minimum: 1}
         currency: {type: string, minLength: 3, maxLength: 3, nullable: true}
         purchased_at: {type: string, format: date, nullable: true}
+    PtoPolicy:
+      type: object
+      required: [id, company_id, year, total_worked_days]
+      properties:
+        id: {type: string, format: uuid}
+        company_id: {type: string, format: uuid}
+        year: {type: integer}
+        total_worked_days: {type: integer}
+        default_amount_of_allowed_holidays: {type: number}
+        default_amount_of_sick_days: {type: number}
+        default_amount_of_pto_days: {type: number}
+
+    CreatePtoPolicyRequest:
+      type: object
+      required: [year]
+      properties:
+        year: {type: integer}
+        default_amount_of_allowed_holidays: {type: number}
+        default_amount_of_sick_days: {type: number}
+        default_amount_of_pto_days: {type: number}
+
+    UpdatePtoPolicyRequest:
+      type: object
+      properties:
+        default_amount_of_allowed_holidays: {type: number}
+        default_amount_of_sick_days: {type: number}
+        default_amount_of_pto_days: {type: number}
+
+    PtoCalendarDay:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        day: {type: string, format: date}
+        day_of_week: {type: integer}
+        day_of_year: {type: integer}
+        is_worked: {type: boolean}
+
+    HolidayBalance:
+      type: object
+      properties:
+        holiday_balance: {type: number}
+        amount_of_allowed_holidays: {type: number, nullable: true}
+        amount_of_sick_days: {type: number, nullable: true}
+        amount_of_pto_days: {type: number, nullable: true}
+
+    PlannedHoliday:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        employee_id: {type: string, format: uuid}
+        planned_date: {type: string, format: date}
+        type: {type: string, enum: [holiday, sick, pto]}
+        full: {type: boolean}
+        actually_taken: {type: boolean}
+
+    CreatePlannedHolidayRequest:
+      type: object
+      required: [planned_date, type]
+      properties:
+        planned_date: {type: string, format: date}
+        type: {type: string, enum: [holiday, sick, pto]}
+        full: {type: boolean, default: true}
+
+    Flow:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        company_id: {type: string, format: uuid}
+        name: {type: string}
+        type: {type: string, enum: [employee_joins_company, employee_leaves_company]}
+        steps:
+          type: array
+          items: {$ref: "#/components/schemas/FlowStep"}
+
+    CreateFlowRequest:
+      type: object
+      required: [name, type]
+      properties:
+        name: {type: string}
+        type: {type: string, enum: [employee_joins_company, employee_leaves_company]}
+
+    FlowStep:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        flow_id: {type: string, format: uuid}
+        number: {type: integer}
+        unit_of_time: {type: string, enum: [days, weeks, months]}
+        modifier: {type: string, enum: [before, after, same_day]}
+        real_number_of_days: {type: integer}
+        actions:
+          type: array
+          items: {$ref: "#/components/schemas/FlowAction"}
+
+    CreateFlowStepRequest:
+      type: object
+      required: [modifier]
+      properties:
+        number: {type: integer, default: 0}
+        unit_of_time: {type: string, enum: [days, weeks, months], default: days}
+        modifier: {type: string, enum: [before, after, same_day]}
+
+    FlowAction:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        step_id: {type: string, format: uuid}
+        type: {type: string, enum: [notification]}
+        recipient: {type: string, enum: [employee, manager, hr]}
+        specific_recipient_information: {type: string, nullable: true}
+
+    CreateFlowActionRequest:
+      type: object
+      required: [type, recipient]
+      properties:
+        type: {type: string, enum: [notification]}
+        recipient: {type: string, enum: [employee, manager, hr]}
+        specific_recipient_information: {type: string, nullable: true}
+
+    Wiki:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        company_id: {type: string, format: uuid}
+        title: {type: string}
+        pages:
+          type: array
+          items: {$ref: "#/components/schemas/WikiPage"}
+
+    WikiPage:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        wiki_id: {type: string, format: uuid}
+        title: {type: string}
+        content: {type: string, nullable: true}
+        pageviews_counter: {type: integer}
+
+    CreateWikiPageRequest:
+      type: object
+      required: [title]
+      properties:
+        title: {type: string}
+        content: {type: string, nullable: true}
+
+    WikiPageRevision:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        page_id: {type: string, format: uuid}
+        employee_id: {type: string, format: uuid, nullable: true}
+        employee_name: {type: string}
+        title: {type: string}
+        content: {type: string, nullable: true}
+        created_at: {type: string, format: date-time}
+
+    AmaSession:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        company_id: {type: string, format: uuid}
+        happened_at: {type: string, format: date}
+        active: {type: boolean}
+        theme: {type: string, nullable: true}
+        questions:
+          type: array
+          items: {$ref: "#/components/schemas/AmaQuestion"}
+
+    CreateAmaSessionRequest:
+      type: object
+      required: [happened_at]
+      properties:
+        happened_at: {type: string, format: date}
+        theme: {type: string, nullable: true}
+        active: {type: boolean, default: false}
+
+    UpdateAmaSessionRequest:
+      type: object
+      properties:
+        happened_at: {type: string, format: date}
+        theme: {type: string, nullable: true}
+        active: {type: boolean}
+
+    AmaQuestion:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        ask_me_anything_session_id: {type: string, format: uuid}
+        employee_id: {type: string, format: uuid, nullable: true}
+        employee_name: {type: string, nullable: true}
+        question: {type: string}
+        answered: {type: boolean}
+        anonymous: {type: boolean}
+
+    CreateAmaQuestionRequest:
+      type: object
+      required: [question]
+      properties:
+        question: {type: string}
+        anonymous: {type: boolean, default: false}
+
+    Group:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        company_id: {type: string, format: uuid}
+        name: {type: string}
+        mission: {type: string, nullable: true}
+        members:
+          type: array
+          items: {$ref: "#/components/schemas/EmployeeSummary"}
+
+    CreateGroupRequest:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string}
+        mission: {type: string, nullable: true}
+
+    Meeting:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        group_id: {type: string, format: uuid}
+        happened: {type: boolean}
+        happened_at: {type: string, format: date, nullable: true}
+        agenda_items:
+          type: array
+          items: {$ref: "#/components/schemas/AgendaItem"}
+
+    AgendaItem:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        meeting_id: {type: string, format: uuid}
+        position: {type: integer}
+        checked: {type: boolean}
+        summary: {type: string}
+        description: {type: string, nullable: true}
+        presented_by_id: {type: string, format: uuid, nullable: true}
+        decisions:
+          type: array
+          items: {$ref: "#/components/schemas/MeetingDecision"}
+
+    CreateAgendaItemRequest:
+      type: object
+      required: [summary]
+      properties:
+        summary: {type: string}
+        description: {type: string, nullable: true}
+        presented_by_id: {type: string, format: uuid, nullable: true}
+        position: {type: integer}
+
+    UpdateAgendaItemRequest:
+      type: object
+      properties:
+        summary: {type: string}
+        description: {type: string, nullable: true}
+        checked: {type: boolean}
+        presented_by_id: {type: string, format: uuid, nullable: true}
+        position: {type: integer}
+
+    MeetingDecision:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        agenda_item_id: {type: string, format: uuid}
+        description: {type: string}
+
+    CompanyInvoice:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        company_id: {type: string, format: uuid}
+        usage_history_id: {type: string, format: uuid, nullable: true}
+        number_of_active_employees: {type: integer, nullable: true}
+        sent_to_customer: {type: boolean}
+        customer_has_paid: {type: boolean}
+        email_address_invoice_sent_to: {type: string, nullable: true}
+        created_at: {type: string, format: date-time}
+
+    InstanceFlags:
+      type: object
+      required: [enable_signups, demo_mode, enable_paid_plan]
+      properties:
+        enable_signups: {type: boolean}
+        demo_mode: {type: boolean}
+        enable_paid_plan: {type: boolean}

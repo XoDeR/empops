@@ -2,10 +2,12 @@
 
 namespace Modules\Recruit\Services;
 
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Company\Models\Company;
+use Modules\Company\Services\FlowService;
 use Modules\Employee\Models\Employee;
 use Modules\Employee\Services\EmployeeService;
 use Modules\Recruit\Models\Candidate;
@@ -423,6 +425,13 @@ final class RecruitService
             $candidate->employee_id = $employee->id;
             $candidate->employee_name = trim($employee->first_name.' '.$employee->last_name);
             $candidate->save();
+
+            app(FlowService::class)->scheduleForEmployee(
+                $company,
+                $employee,
+                'employee_joins_company',
+                Carbon::parse($data['hired_at']),
+            );
 
             return [
                 'candidate' => $this->showCandidate($candidate->fresh()),

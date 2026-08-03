@@ -1,0 +1,27 @@
+DROP TABLE IF EXISTS company_invoices;
+DROP TABLE IF EXISTS company_usage_history_details;
+DROP TABLE IF EXISTS company_daily_usage_history;
+DROP TABLE IF EXISTS meeting_decisions;
+DROP TABLE IF EXISTS agenda_items;
+DROP TABLE IF EXISTS employee_meeting;
+DROP TABLE IF EXISTS meetings;
+DROP TABLE IF EXISTS employee_group;
+DROP TABLE IF EXISTS groups;
+DROP TABLE IF EXISTS ask_me_anything_questions;
+DROP TABLE IF EXISTS ask_me_anything_sessions;
+DROP TABLE IF EXISTS wiki_page_revisions;
+DROP TABLE IF EXISTS wiki_pages;
+DROP TABLE IF EXISTS wikis;
+DROP TABLE IF EXISTS flow_action_runs;
+DROP TABLE IF EXISTS flow_actions;
+DROP TABLE IF EXISTS flow_steps;
+DROP TABLE IF EXISTS flows;
+DROP TABLE IF EXISTS employee_daily_calendar_entries;
+DROP TABLE IF EXISTS employee_planned_holidays;
+ALTER TABLE employees
+    DROP COLUMN IF EXISTS holiday_balance,
+    DROP COLUMN IF EXISTS amount_of_allowed_holidays,
+    DROP COLUMN IF EXISTS amount_of_sick_days,
+    DROP COLUMN IF EXISTS amount_of_pto_days;
+DROP TABLE IF EXISTS company_calendars;
+DROP TABLE IF EXISTS company_pto_policies;

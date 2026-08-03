@@ -1,0 +1,9 @@
+{
+    "name": "Billing",
+    "alias": "billing",
+    "description": "Paid-plan usage and invoices",
+    "keywords": [],
+    "priority": 80,
+    "providers": ["Modules\\Billing\\Providers\\BillingServiceProvider"],
+    "files": []
+}

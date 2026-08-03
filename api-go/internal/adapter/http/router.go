@@ -18,6 +18,9 @@ type RouterConfig struct {
 	AuthUseCase    *usecase.AuthUseCase
 	JWTManager     *jwt.Manager
 	AllowedOrigins []string
+	EnableSignups  bool
+	DemoMode       bool
+	EnablePaidPlan bool
 	// UploadRoutes mounts a dedicated (non-/api/v1) upload API under /api/upload.
 	// Intended to host the resumable chunked upload contract (upload-lib).
 	UploadRoutes func(r chi.Router)
@@ -57,9 +60,20 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	r.Route("/api/v1", func(v1 chi.Router) {
 		v1.Get("/health", HealthHandler)
 		v1.Get("/version", VersionHandler)
+		v1.Get("/instance", func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"data":{"enable_signups":` + boolJSON(cfg.EnableSignups) +
+				`,"demo_mode":` + boolJSON(cfg.DemoMode) + `,"enable_paid_plan":` + boolJSON(cfg.EnablePaidPlan) + `}}`))
+		})
 
 		v1.Route("/auth", func(auth chi.Router) {
-			auth.Post("/register", authHandler.Register)
+			auth.Post("/register", func(w http.ResponseWriter, r *http.Request) {
+				if !cfg.EnableSignups {
+					http.Error(w, `{"message":"Signups are disabled"}`, http.StatusForbidden)
+					return
+				}
+				authHandler.Register(w, r)
+			})
 			auth.Post("/login", authHandler.Login)
 			auth.Post("/refresh", authHandler.Refresh)
 			auth.Post("/logout", authHandler.Logout)
@@ -76,4 +90,9 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	})
 
 	return r
+}
+
+func boolJSON(v bool) string {
+	if v { return "true" }
+	return "false"
 }

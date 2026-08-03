@@ -2,6 +2,7 @@
 
 namespace Modules\Company\Providers;
 
+use Modules\Company\Console\ProcessFlowsCommand;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 
 class CompanyServiceProvider extends ModuleServiceProvider
@@ -13,4 +14,13 @@ class CompanyServiceProvider extends ModuleServiceProvider
     protected array $providers = [
         RouteServiceProvider::class,
     ];
+
+    public function boot(): void
+    {
+        parent::boot();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([ProcessFlowsCommand::class]);
+        }
+    }
 }

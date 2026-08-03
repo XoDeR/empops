@@ -47,6 +47,17 @@ func (m *Module) RegisterRoutes(r chi.Router) {
 		sub.Put(base+"/employees/{employeeId}/work-from-home", m.handler.SetWorkFromHome)
 		sub.Get(base+"/work-from-home", m.handler.WorkFromHomeSetting)
 		sub.Patch(base+"/work-from-home", m.handler.UpdateWorkFromHomeSetting)
+
+		sub.With(companyauth.RequirePermission("pto.view")).Get(base+"/pto-policies", m.handler.ListPTOPolicies)
+		sub.With(companyauth.RequirePermission("pto.manage")).Post(base+"/pto-policies", m.handler.CreatePTOPolicy)
+		sub.With(companyauth.RequirePermission("pto.view")).Get(base+"/pto-policies/{policyId}", m.handler.ShowPTOPolicy)
+		sub.With(companyauth.RequirePermission("pto.manage")).Patch(base+"/pto-policies/{policyId}", m.handler.UpdatePTOPolicy)
+		sub.With(companyauth.RequirePermission("pto.view")).Get(base+"/pto-policies/{policyId}/calendar", m.handler.PTOPolicyCalendar)
+		sub.With(companyauth.RequirePermission("pto.manage")).Patch(base+"/pto-policies/{policyId}/calendar/{day}", m.handler.UpdatePTOPolicyCalendarDay)
+		sub.Get(base+"/employees/{employeeId}/holiday-balance", m.handler.HolidayBalance)
+		sub.Get(base+"/employees/{employeeId}/holidays", m.handler.ListHolidays)
+		sub.Post(base+"/employees/{employeeId}/holidays", m.handler.CreateHoliday)
+		sub.Delete(base+"/employees/{employeeId}/holidays/{holidayId}", m.handler.DeleteHoliday)
 	})
 }
 func (m *Module) Start(context.Context) error { return nil }

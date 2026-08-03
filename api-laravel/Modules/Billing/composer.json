@@ -1,0 +1,9 @@
+{
+    "name": "nwidart/billing",
+    "description": "",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Billing\\": "app/"
+        }
+    }
+}

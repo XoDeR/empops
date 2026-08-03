@@ -4,7 +4,7 @@ import { apiFetch } from '@/lib/api'
 import { authFetch } from '@/lib/authFetch'
 import { useAuthStore } from '@/stores/auth'
 import { useCompanyStore } from '@/stores/company'
-import type { CompanyMembership } from '@/types/api'
+import type { CompanyMembership, InstanceFlags } from '@/types/api'
 
 export default function AppLayout() {
   const navigate = useNavigate()
@@ -21,6 +21,11 @@ export default function AppLayout() {
       const res = await authFetch<CompanyMembership[]>('/companies')
       return res.data
     },
+  })
+  const instanceQuery = useQuery({
+    queryKey: ['instance'],
+    queryFn: async () => (await apiFetch<InstanceFlags>('/instance')).data,
+    retry: false,
   })
 
   const handleLogout = async () => {
@@ -46,6 +51,11 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen">
+      {instanceQuery.data?.demo_mode && (
+        <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900">
+          Demo mode — data may be reset periodically.
+        </div>
+      )}
       <header className="border-b border-black/10 bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-6 py-4">
           <Link

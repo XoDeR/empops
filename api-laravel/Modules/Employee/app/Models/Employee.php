@@ -37,6 +37,10 @@ class Employee extends Model implements HasMedia
         'invitation_used_at',
         'locked',
         'consecutive_worklog_missed',
+        'holiday_balance',
+        'amount_of_allowed_holidays',
+        'amount_of_sick_days',
+        'amount_of_pto_days',
     ];
 
     protected function casts(): array
@@ -46,6 +50,10 @@ class Employee extends Model implements HasMedia
             'invitation_used_at' => 'datetime',
             'locked' => 'boolean',
             'consecutive_worklog_missed' => 'integer',
+            'holiday_balance' => 'decimal:4',
+            'amount_of_allowed_holidays' => 'decimal:2',
+            'amount_of_sick_days' => 'decimal:2',
+            'amount_of_pto_days' => 'decimal:2',
         ];
     }
 

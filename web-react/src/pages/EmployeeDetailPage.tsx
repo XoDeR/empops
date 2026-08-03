@@ -6,7 +6,14 @@ import { useCompanyContext } from '@/routes/CompanyLayout'
 import { ImageUploadField } from '@/components/ImageUploadField'
 import { PlacesSection } from '@/components/PlacesSection'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
-import type { Employee, EmployeeSummary, Hardware, Software } from '@/types/api'
+import type {
+  Employee,
+  EmployeeSummary,
+  Hardware,
+  HolidayBalance,
+  PlannedHoliday,
+  Software,
+} from '@/types/api'
 
 export default function EmployeeDetailPage() {
   const { companyId, employeeId } = useParams<{ companyId: string; employeeId: string }>()
@@ -15,6 +22,8 @@ export default function EmployeeDetailPage() {
   const [tab, setTab] = useState<'profile' | 'work'>('work')
   const [managerId, setManagerId] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [holidayDate, setHolidayDate] = useState('')
+  const [holidayType, setHolidayType] = useState('holiday')
 
   const employeeQuery = useQuery({
     queryKey: ['employee', companyId, employeeId],
@@ -69,6 +78,34 @@ export default function EmployeeDetailPage() {
       return res.data
     },
     enabled: canSeeAssets,
+  })
+
+  const balanceQuery = useQuery({
+    queryKey: ['holiday-balance', companyId, employeeId],
+    queryFn: async () => (await authFetch<HolidayBalance>(`/companies/${companyId}/employees/${employeeId}/holiday-balance`)).data,
+    enabled: canSeeAssets,
+  })
+
+  const holidaysQuery = useQuery({
+    queryKey: ['planned-holidays', companyId, employeeId],
+    queryFn: async () => (await authFetch<PlannedHoliday[]>(`/companies/${companyId}/employees/${employeeId}/holidays`)).data,
+    enabled: canSeeAssets,
+  })
+
+  const createHoliday = useMutation({
+    mutationFn: () => authFetch(`/companies/${companyId}/employees/${employeeId}/holidays`, {
+      method: 'POST',
+      body: JSON.stringify({ planned_date: holidayDate, type: holidayType, full: true, actually_taken: false }),
+    }),
+    onSuccess: () => {
+      setHolidayDate('')
+      void qc.invalidateQueries({ queryKey: ['planned-holidays', companyId, employeeId] })
+    },
+  })
+
+  const deleteHoliday = useMutation({
+    mutationFn: (holidayId: string) => authFetch(`/companies/${companyId}/employees/${employeeId}/holidays/${holidayId}`, { method: 'DELETE' }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['planned-holidays', companyId, employeeId] }),
   })
 
   const invalidate = () => {
@@ -262,6 +299,36 @@ export default function EmployeeDetailPage() {
               </div>
             )}
           </section>
+
+          {canSeeAssets && (
+            <section className="rounded-2xl border border-black/10 bg-white/70 p-4">
+              <h3 className="font-medium">Holidays</h3>
+              {balanceQuery.data && (
+                <p className="mt-1 text-sm text-black/55">
+                  Balance: {Number(balanceQuery.data.holiday_balance).toFixed(2)} days
+                  {balanceQuery.data.amount_of_allowed_holidays != null && ` · ${balanceQuery.data.amount_of_allowed_holidays} allowed`}
+                </p>
+              )}
+              <ul className="mt-3 space-y-2 text-sm">
+                {(holidaysQuery.data ?? []).map((holiday) => (
+                  <li key={holiday.id} className="flex items-center justify-between gap-3">
+                    <span>{holiday.planned_date} · {holiday.type}{holiday.full ? '' : ' (half day)'}{holiday.actually_taken ? ' · taken' : ''}</span>
+                    <button type="button" className="text-xs text-red-700" onClick={() => deleteHoliday.mutate(holiday.id)}>Remove</button>
+                  </li>
+                ))}
+              </ul>
+              {!holidaysQuery.isLoading && !holidaysQuery.data?.length && <p className="mt-2 text-sm text-black/50">No holidays planned.</p>}
+              <form className="mt-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (holidayDate) createHoliday.mutate() }}>
+                <input type="date" className="rounded-lg border border-black/15 px-3 py-2 text-sm" value={holidayDate} onChange={(e) => setHolidayDate(e.target.value)} />
+                <select className="rounded-lg border border-black/15 px-3 py-2 text-sm" value={holidayType} onChange={(e) => setHolidayType(e.target.value)}>
+                  <option value="holiday">Holiday</option>
+                  <option value="sick">Sick</option>
+                  <option value="pto">PTO</option>
+                </select>
+                <button className="rounded-lg bg-[var(--empops-accent)] px-3 py-2 text-sm text-white">Plan day</button>
+              </form>
+            </section>
+          )}
 
           <section className="rounded-2xl border border-black/10 bg-white/70 p-4">
             <h3 className="font-medium">Teams</h3>

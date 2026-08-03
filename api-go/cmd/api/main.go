@@ -28,9 +28,11 @@ import (
 	"github.com/XoDeR/empops/api-go/pkg/module"
 
 	_ "github.com/XoDeR/empops/api-go/internal/modules/company"
+	_ "github.com/XoDeR/empops/api-go/internal/modules/billing"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/employee"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/finance"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/grow"
+	_ "github.com/XoDeR/empops/api-go/internal/modules/group"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/hardware"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/media"
 	_ "github.com/XoDeR/empops/api-go/internal/modules/notification"
@@ -158,6 +160,9 @@ func run() error {
 		AuthUseCase:    authUseCase,
 		JWTManager:     jwtManager,
 		AllowedOrigins: cfg.CORS.AllowedOrigins,
+		EnableSignups:  envBool("ENABLE_SIGNUPS", true),
+		DemoMode:       envBool("DEMO_MODE", false),
+		EnablePaidPlan: envBool("ENABLE_PAID_PLAN", false),
 		UploadRoutes:   uploadRoutes,
 		RegisterModules: func(r chi.Router) {
 			module.RegisterRoutes(r, initialized)
@@ -207,4 +212,16 @@ func envOrDefault(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func envBool(key string, fallback bool) bool {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return fallback
+	}
+	value, err := strconv.ParseBool(raw)
+	if err != nil {
+		return fallback
+	}
+	return value
 }

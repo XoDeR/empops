@@ -18,6 +18,10 @@ final class AuthService
      */
     public function register(string $name, string $email, string $password): array
     {
+        if (! config('empops.enable_signups')) {
+            throw new RuntimeException('Signups are disabled', 403);
+        }
+
         $user = User::query()->create([
             'name' => $name,
             'email' => $email,

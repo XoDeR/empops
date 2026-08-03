@@ -748,3 +748,174 @@ export type Software = {
   updated_at?: string
 }
 
+export type PtoPolicy = {
+  id: string
+  company_id?: string
+  year: number
+  total_worked_days: number
+  default_amount_of_allowed_holidays: number
+  default_amount_of_sick_days: number
+  default_amount_of_pto_days: number
+  created_at?: string
+  updated_at?: string
+}
+
+export type PtoCalendarDay = {
+  id?: string
+  company_pto_policy_id?: string
+  day: string
+  day_of_week?: number
+  day_of_year?: number
+  is_worked: boolean
+}
+
+export type HolidayBalance = {
+  employee_id: string
+  holiday_balance: number
+  amount_of_allowed_holidays: number | null
+  amount_of_sick_days: number | null
+  amount_of_pto_days: number | null
+}
+
+export type PlannedHoliday = {
+  id: string
+  employee_id: string
+  planned_date: string
+  type: string
+  full: boolean
+  actually_taken: boolean
+  created_at?: string
+}
+
+export type FlowAction = {
+  id: string
+  step_id: string
+  type: string
+  recipient: string
+  specific_recipient_information: string | null
+}
+
+export type FlowStep = {
+  id: string
+  flow_id: string
+  number: number
+  unit_of_time: string
+  modifier: string
+  real_number_of_days: number
+  actions?: FlowAction[]
+}
+
+export type Flow = {
+  id: string
+  company_id: string
+  name: string
+  type: string
+  steps?: FlowStep[]
+}
+
+export type WikiPageRevision = {
+  id: string
+  page_id: string
+  employee_id: string | null
+  employee_name: string
+  title: string
+  content: string | null
+  created_at?: string
+}
+
+export type WikiPage = {
+  id: string
+  wiki_id: string
+  title: string
+  content: string | null
+  pageviews_counter: number
+  revisions?: WikiPageRevision[]
+  created_at?: string
+  updated_at?: string
+}
+
+export type Wiki = {
+  id: string
+  company_id: string
+  title: string
+  pages?: WikiPage[]
+  created_at?: string
+  updated_at?: string
+}
+
+export type AmaQuestion = {
+  id: string
+  ask_me_anything_session_id: string
+  employee_id: string | null
+  employee?: EmployeeSummary | null
+  question: string
+  answered: boolean
+  anonymous: boolean
+  created_at?: string
+}
+
+export type AmaSession = {
+  id: string
+  company_id: string
+  happened_at: string
+  active: boolean
+  theme: string | null
+  questions?: AmaQuestion[]
+}
+
+export type MeetingDecision = {
+  id: string
+  agenda_item_id: string
+  description: string
+  created_at?: string
+}
+
+export type AgendaItem = {
+  id: string
+  meeting_id: string
+  position: number
+  checked: boolean
+  summary: string
+  description: string | null
+  presented_by_id: string | null
+  presented_by?: EmployeeSummary | null
+  decisions?: MeetingDecision[]
+}
+
+export type Meeting = {
+  id: string
+  group_id: string
+  happened: boolean
+  happened_at: string | null
+  attendees?: EmployeeSummary[]
+  agenda_items?: AgendaItem[]
+  agenda?: AgendaItem[]
+}
+
+export type Group = {
+  id: string
+  company_id: string
+  name: string
+  mission: string | null
+  members?: EmployeeSummary[]
+  meetings?: Meeting[]
+}
+
+export type CompanyInvoice = {
+  id: string
+  company_id: string
+  usage_history_id: string | null
+  sent_to_customer: boolean
+  customer_has_paid: boolean
+  email_address_invoice_sent_to: string | null
+  number_of_active_employees?: number
+  logged_on?: string
+  created_at?: string
+}
+
+export type InstanceFlags = {
+  enable_signups: boolean
+  enable_paid_plan: boolean
+  demo_mode: boolean
+}
+

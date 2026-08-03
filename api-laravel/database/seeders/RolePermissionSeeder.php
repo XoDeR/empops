@@ -88,6 +88,18 @@ class RolePermissionSeeder extends Seeder
             'hardware.manage',
             'software.view',
             'software.manage',
+            'pto.view',
+            'pto.manage',
+            'flows.manage',
+            'wiki.view',
+            'wiki.create',
+            'wiki.update',
+            'wiki.delete',
+            'ama.view',
+            'ama.manage',
+            'groups.view',
+            'groups.manage',
+            'billing.view',
         ];
 
         foreach ($permissions as $name) {
@@ -179,6 +191,17 @@ class RolePermissionSeeder extends Seeder
             'hardware.manage',
             'software.view',
             'software.manage',
+            'pto.view',
+            'pto.manage',
+            'flows.manage',
+            'wiki.view',
+            'wiki.create',
+            'wiki.update',
+            'wiki.delete',
+            'ama.view',
+            'ama.manage',
+            'groups.view',
+            'groups.manage',
         ]);
 
         $accountant->syncPermissions([
@@ -197,6 +220,9 @@ class RolePermissionSeeder extends Seeder
             'e_coffee.view',
             'discipline.view',
             'discipline.manage',
+            'pto.view',
+            'groups.view',
+            'groups.manage',
         ]);
 
         $employee->syncPermissions([
@@ -222,6 +248,13 @@ class RolePermissionSeeder extends Seeder
             'rate_manager.answer',
             'skills.view',
             'e_coffee.view',
+            'pto.view',
+            'wiki.view',
+            'wiki.create',
+            'wiki.update',
+            'ama.view',
+            'groups.view',
+            'groups.manage',
         ]);
     }
 }

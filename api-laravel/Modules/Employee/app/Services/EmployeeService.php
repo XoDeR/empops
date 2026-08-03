@@ -5,14 +5,20 @@ namespace Modules\Employee\Services;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Modules\Company\Models\Company;
+use Modules\Company\Services\FlowService;
 use Modules\Employee\Models\DirectReport;
 use Modules\Employee\Models\Employee;
+use Modules\Time\Models\CompanyPtoPolicy;
 use RuntimeException;
 
 final class EmployeeService
 {
     public function create(Company $company, array $data, string $role = 'employee'): Employee
     {
+        $policy = CompanyPtoPolicy::query()
+            ->where('company_id', $company->id)
+            ->where('year', now()->year)
+            ->first();
         $employee = Employee::query()->create([
             'company_id' => $company->id,
             'email' => $data['email'],
@@ -22,6 +28,9 @@ final class EmployeeService
             'position_id' => $data['position_id'] ?? null,
             'employee_status_id' => $data['employee_status_id'] ?? null,
             'locked' => false,
+            'amount_of_allowed_holidays' => $policy?->default_amount_of_allowed_holidays,
+            'amount_of_sick_days' => $policy?->default_amount_of_sick_days,
+            'amount_of_pto_days' => $policy?->default_amount_of_pto_days,
         ]);
 
         $employee->assignRole($role);
@@ -31,6 +40,7 @@ final class EmployeeService
 
     public function update(Employee $employee, array $data): Employee
     {
+        $wasLocked = (bool) $employee->locked;
         $employee->fill(collect($data)->only([
             'email',
             'first_name',
@@ -42,6 +52,10 @@ final class EmployeeService
         ])->all());
 
         $employee->save();
+
+        if (! $wasLocked && $employee->locked) {
+            app(FlowService::class)->scheduleForEmployee($employee->company, $employee, 'employee_leaves_company', now());
+        }
 
         if (isset($data['role'])) {
             $keepManager = $employee->hasRole('manager');
