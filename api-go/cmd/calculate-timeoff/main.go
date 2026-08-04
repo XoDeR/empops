@@ -21,7 +21,7 @@ func run()error{
 		SELECT e.id AS employee_id,e.company_id,e.holiday_balance,
 			COALESCE(e.amount_of_allowed_holidays,p.default_amount_of_allowed_holidays,0) AS yearly,
 			NULLIF(p.total_worked_days,0) AS worked_days,
-			COALESCE((SELECT CASE WHEN h.full THEN 1.0 ELSE 0.5 END FROM employee_planned_holidays h
+			COALESCE((SELECT CASE WHEN h."full" THEN 1.0 ELSE 0.5 END FROM employee_planned_holidays h
 				WHERE h.employee_id=e.id AND h.planned_date=$1 AND h.actually_taken=true
 				AND h.type IN ('holiday','pto') ORDER BY h.created_at LIMIT 1),0) AS taken
 		FROM employees e JOIN company_pto_policies p ON p.company_id=e.company_id AND p.year=EXTRACT(YEAR FROM $1::date)

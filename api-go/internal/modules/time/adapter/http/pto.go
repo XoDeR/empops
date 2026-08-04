@@ -148,7 +148,7 @@ func (h *Handler) HolidayBalance(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListHolidays(w http.ResponseWriter, r *http.Request) {
 	member, _ := companyauth.MemberFromContext(r.Context()); employeeID := chi.URLParam(r,"employeeId")
 	if employeeID != member.EmployeeID && !member.HasPermission("pto.view") { response.Fail(w,403,"Forbidden",nil);return }
-	q := `SELECT h.id,h.planned_date,h.type,h.full,h.actually_taken,h.created_at FROM employee_planned_holidays h
+	q := `SELECT h.id,h.planned_date,h.type,h."full",h.actually_taken,h.created_at FROM employee_planned_holidays h
 		JOIN employees e ON e.id=h.employee_id WHERE e.id=$1 AND e.company_id=$2`
 	args := []interface{}{employeeID, member.CompanyID}
 	if year := r.URL.Query().Get("year"); year != "" {
@@ -169,7 +169,7 @@ func (h *Handler) CreateHoliday(w http.ResponseWriter, r *http.Request) {
 	day,err:=time.Parse("2006-01-02",req.PlannedDate);req.Type=strings.TrimSpace(req.Type)
 	if err!=nil||req.Type==""{response.Fail(w,422,"planned_date and type are required",nil);return}
 	full:=true;if req.Full!=nil{full=*req.Full};id:=uuidv7.New()
-	tag,err:=h.pool.Exec(r.Context(),`INSERT INTO employee_planned_holidays(id,employee_id,planned_date,type,full,actually_taken)
+	tag,err:=h.pool.Exec(r.Context(),`INSERT INTO employee_planned_holidays(id,employee_id,planned_date,type,"full",actually_taken)
 		SELECT $1,e.id,$2,$3,$4,$5 FROM employees e WHERE e.id=$6 AND e.company_id=$7`,
 		id,day,req.Type,full,req.ActuallyTaken,employeeID,member.CompanyID)
 	if err!=nil{response.Fail(w,409,"holiday already exists",err.Error());return};if tag.RowsAffected()==0{response.Fail(w,404,"Employee not found",nil);return}

@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS employee_planned_holidays (
     employee_id UUID NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
     planned_date DATE NOT NULL,
     type VARCHAR(32) NOT NULL,
-    full BOOLEAN NOT NULL DEFAULT true,
+    "full" BOOLEAN NOT NULL DEFAULT true,
     actually_taken BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
