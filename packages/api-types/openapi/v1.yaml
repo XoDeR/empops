@@ -7206,6 +7206,7 @@ components:
         purchase_amount: {type: integer, nullable: true, minimum: 1}
         currency: {type: string, minLength: 3, maxLength: 3, nullable: true}
         purchased_at: {type: string, format: date, nullable: true}
+
     PtoPolicy:
       type: object
       required: [id, company_id, year, total_worked_days]

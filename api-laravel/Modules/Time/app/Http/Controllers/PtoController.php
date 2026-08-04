@@ -69,11 +69,19 @@ class PtoController extends Controller
 
     public function balance(Request $request, string $companyId, string $employeeId): JsonResponse
     {
+        if (! $this->canViewEmployee($request, $employeeId)) {
+            return ApiResponse::error('Forbidden', 403);
+        }
+
         return ApiResponse::success($this->pto->holidayBalance($this->employee($request, $employeeId)));
     }
 
     public function holidays(Request $request, string $companyId, string $employeeId): JsonResponse
     {
+        if (! $this->canViewEmployee($request, $employeeId)) {
+            return ApiResponse::error('Forbidden', 403);
+        }
+
         return ApiResponse::success($this->pto->listHolidays($this->employee($request, $employeeId)));
     }
 
@@ -122,5 +130,15 @@ class PtoController extends Controller
         $actor = $request->attributes->get('employee');
 
         return $actor->id === $employeeId || $actor->hasPermissionTo('pto.manage');
+    }
+
+    private function canViewEmployee(Request $request, string $employeeId): bool
+    {
+        /** @var Employee $actor */
+        $actor = $request->attributes->get('employee');
+
+        return $actor->id === $employeeId
+            || $actor->hasPermissionTo('pto.manage')
+            || $actor->hasAnyRole(['administrator', 'hr']);
     }
 }
