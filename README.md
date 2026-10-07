@@ -15,11 +15,11 @@ API-first HR operations platform — Laravel and Go backends with a React SPA.
 Features cover company and employee directories, teams and org hierarchy, media uploads, places, notifications, time off, worklogs, flows, finance, recruiting, growth, hardware and software inventory, billing, and a wiki. A shared OpenAPI spec lives in packages/api-types, and Docker Compose provides local Postgres.
 
 ## Laravel API libraries
-nwidart/laravel-modules         Modular structure (Modules/Auth, Team, etc.)
-firebase/php-jwt                JWT auth (the custom AuthenticateJwt middleware)
-spatie/laravel-permission       Roles and permissions (RBAC)
-spatie/laravel-medialibrary     File and media uploads
-spatie/laravel-activitylog      Audit log
+- nwidart/laravel-modules         Modular structure (Modules/Auth, Team, etc.)
+- firebase/php-jwt                JWT auth (the custom AuthenticateJwt middleware)
+- spatie/laravel-permission       Roles and permissions (RBAC)
+- spatie/laravel-medialibrary     File and media uploads
+- spatie/laravel-activitylog      Audit log
 
 ### Quick start
 
