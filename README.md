@@ -10,61 +10,31 @@ API-first HR operations platform — Laravel and Go backends with a React SPA.
 | `packages/api-types/` | Shared OpenAPI skeleton |
 | `docker-compose.yml` | Local Postgres (Laravel + Go, separate volumes) |
 
-## Step 0
+## Features
 
-Platform skeleton — see each part’s `docs/step-0.md`:
+Features cover company and employee directories, teams and org hierarchy, media uploads, places, notifications, time off, worklogs, flows, finance, recruiting, growth, hardware and software inventory, billing, and a wiki. A shared OpenAPI spec lives in packages/api-types, and Docker Compose provides local Postgres.
 
-- [api-laravel/docs/step-0.md](api-laravel/docs/step-0.md)
-- [api-go/docs/step-0.md](api-go/docs/step-0.md)
-- [web-react/docs/step-0.md](web-react/docs/step-0.md)
-
-## Step 1 — Auth + RBAC + Companies + Employees
-
-Multi-tenant employee directory with login, company tenancy, RBAC, and Adminland.
-
-- [api-laravel/docs/step-1.md](api-laravel/docs/step-1.md)
-- [api-go/docs/step-1.md](api-go/docs/step-1.md)
-- [web-react/docs/step-1.md](web-react/docs/step-1.md)
-- OpenAPI: [packages/api-types/openapi/v1.yaml](packages/api-types/openapi/v1.yaml)
-- Auth prod TODOs: [empops-docs/auth-prod-todos.md](../empops-docs/auth-prod-todos.md)
-
-## Step 2 — Teams, hierarchy, and org structure
-
-Org chart–aware HRIS: teams (members/lead), manager/direct reports, dashboard shells, audit logs.
-
-- [api-laravel/docs/step-2.md](api-laravel/docs/step-2.md)
-- [api-go/docs/step-2.md](api-go/docs/step-2.md)
-- [web-react/docs/step-2.md](web-react/docs/step-2.md)
-- OpenAPI: [packages/api-types/openapi/v1.yaml](packages/api-types/openapi/v1.yaml)
-
-## Step 3 — Media uploads + places
-
-Profiles and companies with avatars/logos and addresses.
-
-- [api-laravel/docs/step-3.md](api-laravel/docs/step-3.md)
-- [api-go/docs/step-3.md](api-go/docs/step-3.md)
-- [web-react/docs/step-3.md](web-react/docs/step-3.md)
-
-## Step 4 — Communicate (core collaboration)
-
-Worklogs, company/team news, ships, in-app notifications, Q&A.
-
-- [api-laravel/docs/step-4.md](api-laravel/docs/step-4.md)
-- [api-go/docs/step-4.md](api-go/docs/step-4.md)
-- [web-react/docs/step-4.md](web-react/docs/step-4.md)
+## Laravel API libraries
+nwidart/laravel-modules         Modular structure (Modules/Auth, Team, etc.)
+firebase/php-jwt                JWT auth (the custom AuthenticateJwt middleware)
+spatie/laravel-permission       Roles and permissions (RBAC)
+spatie/laravel-medialibrary     File and media uploads
+spatie/laravel-activitylog      Audit log
 
 ### Quick start
 
 ```bash
-# Postgres — Laravel :5432, Go :5433 (separate volumes)
-docker compose up -d postgres-laravel postgres-go
 
 # Laravel API :8000
+# Postgres — Laravel :5432 (separate volumes)
+docker compose up -d postgres-laravel
 cd api-laravel && composer install && cp .env.example .env && php artisan key:generate
 php artisan migrate --force && php artisan db:seed --class=RolePermissionSeeder --force
 php artisan serve
 
 # Go API :8080 (parity)
+# Postgres — Go :5433 (separate volumes)
+docker compose up -d postgres-go
 cd api-go && go run ./cmd/migrate && go run ./cmd/api
 
 # React :5173
